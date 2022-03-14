@@ -17,7 +17,9 @@ but that sounds tricky to do.
 
 ### Useful link
 
-#### How to write a Lisp
+#### How to write a Lisp interpreter
+
+All interpreters seems to skip the recursion part, could we add recursion using the Y combinator?
 
 https://norvig.com/lispy.html
 
