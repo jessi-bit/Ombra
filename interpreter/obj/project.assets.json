@@ -113,19 +113,19 @@
     ]
   },
   "packageFolders": {
-    "/home/lazywithclass/.nuget/packages/": {}
+    "C:\\Users\\jessi\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/lazywithclass/workspace/Ombra/interpreter/interpreter.fsproj",
+      "projectUniqueName": "c:\\Users\\jessi\\OneDrive\\Documenti\\FunctionalProgramming\\project\\Ombra\\interpreter\\interpreter.fsproj",
       "projectName": "interpreter",
-      "projectPath": "/home/lazywithclass/workspace/Ombra/interpreter/interpreter.fsproj",
-      "packagesPath": "/home/lazywithclass/.nuget/packages/",
-      "outputPath": "/home/lazywithclass/workspace/Ombra/interpreter/obj/",
+      "projectPath": "c:\\Users\\jessi\\OneDrive\\Documenti\\FunctionalProgramming\\project\\Ombra\\interpreter\\interpreter.fsproj",
+      "packagesPath": "C:\\Users\\jessi\\.nuget\\packages\\",
+      "outputPath": "c:\\Users\\jessi\\OneDrive\\Documenti\\FunctionalProgramming\\project\\Ombra\\interpreter\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/lazywithclass/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\jessi\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net6.0"
@@ -166,7 +166,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.200/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }
