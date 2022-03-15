@@ -13,6 +13,12 @@ type OToken =
     | OLiteralString of string
     | OIdentifier of string
 
+(*
+type Expression =
+    | OToken
+    | List of Expression
+*)
+
 let categorize token =
     match parseFloat token with
         | Some f -> OLiteralFloat f
