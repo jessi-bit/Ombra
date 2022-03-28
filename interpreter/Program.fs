@@ -1,9 +1,6 @@
 ﻿let tokenize (code: string) =
-    code
-        .Replace("(", " ( ")
-        .Replace(")", " ) ")
-        .Trim()
-        .Split(" ")
+    let result = code.Replace("(", " ( ").Replace(")", " ) ").Trim().Split(" ")
+    Array.toList result
 
 let parseFloat s =
     try
@@ -12,13 +9,16 @@ let parseFloat s =
     with _ -> None
 
 type OToken =
-    | OLiteralFloat of f : float32
-    | OLiteralString of s : string
-    | OIdentifier of s : string
+    | OLiteralFloat of float32
+    | OLiteralString of string
+    | OIdentifier of string
 
-type Expression =
-    | OToken
-    | List of Expression
+type Expression<'s> =
+    | Nil 
+    | List of List<'s> * Expression<'s> 
+
+let exp1 = List (["2", "+", "1"], List (["3", "+", "5"], Nil))
+printfn "Expression %O" exp1
 
 
 let categorize token =
@@ -28,42 +28,16 @@ let categorize token =
                       | s when s.StartsWith "\"" && s.EndsWith "\"" -> OLiteralString (s.Substring(1, (s.Length) - 1))
                       | s -> OIdentifier s
 
+// let rec parenthesizeDiff tokens result =
+//     match tokens with
+//     | [] -> Nil
+//     | head::tail when head = "(" -> 
+    
+let rec parenthesize tokens result =
+    match tokens with
+        | [] -> result
+        | head::tail when head = "(" -> parenthesize tail result
+        | head::_ when head = ")" -> result
+        | head::tail -> parenthesize tail (result @ [(categorize head)])
 
-// let parenthesize tokens result =
-//     match List.head tokens with
-//     | OIdentifier "(" -> let innerResult = parenthesize List.tail tokens 
-//                          parenthesize list.Tail tokens result @ innerResult
-//     | OIdentifier ")" -> result
-//     | _ ->
-
-let parenthesize tokens result =
-    match List.head tokens with
-    | OIdentifier "(" -> let innerResult = parenthesize List.tail tokens 
-                         parenthesize list.Tail tokens result @ innerResult
-    | OIdentifier ")" -> result
-    | _ ->
-
-
-
-
-
-
-// TODO add custom types to tokenised and parenthesized?
-(*
-
-let rec parenthesize tokenised parenthesized =
-    match tokenised with =
-        |
-*)
-
-let result = tokenize "(+ 1 (+ 1 40))"
-(*
-[
-    OIdentifier "+"; OLiteralFloat 1;
-    [
-        OIdentifier "+"; OLiteralFloat 1; OLiteraFloat 40
-    ]
-
-]
-*)
-
+let result = parenthesize (tokenize "(+ 1 41)") []
