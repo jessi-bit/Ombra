@@ -11,7 +11,7 @@ type otype =
 
 type funx =
     | Sum of Num * Num
-    | otype Cons of otype * otype List
+    | Cons of otype * otype List
     | Car of
 
 (*
@@ -38,7 +38,7 @@ list
 
 Non creiamo delle funzioni ad hoc per le stringhe perche' sfruttuamo le funzioni che abbiamo
 gia' per le liste e forniamo funzioni per passare da stringa a lista:
-JESSICA -> (J E S S I C A)
-(J E S S I C A) -> JESSICA
+ILJESSICA -> (I L J E S S I C A)
+(I L J E S S I C A) -> ILJESSICA
 *)
 
