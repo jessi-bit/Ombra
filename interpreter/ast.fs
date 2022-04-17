@@ -1,18 +1,20 @@
 // (+ 1 41)
+module Interpreter
+type otype2 =
+    | Num2 of float
+    | Bool2 of bool
+    | Str2 of string
+    | EmptyList2
+    | List2 of otype2 * otype2
+    | Sum2 of otype2 * otype2
+    | Cons2 of otype2 * otype2
+    | Car2 of otype2 
+    | Cdr2 of otype2
+    | Eq2 of otype2 * otype2
+    | Not2 of otype2
+    | ToList2 of otype2
+    | String2 of otype2
 
-let simple = Sum (Num 1, Num 41)
-
-type otype =
-    | Num of float
-    | Bool of bool
-    | Str of string
-    | EmptyList
-    | List of otype * otype
-
-type funx =
-    | Sum of Num * Num
-    | Cons of otype * otype List
-    | Car of
 
 (*
 Funzioni definite per Ombra in F#
