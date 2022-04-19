@@ -1,5 +1,14 @@
 ## Ideas and links
 
+### Useful notes from lectures
+
+IDE-like environments that allow to model an interpreter for a programming language, they can generate lexer, interpreter, parser, and also
+a testing system for these interpreters.
+
+https://redex.racket-lang.org/
+
+https://www.spoofax.dev/
+
 ### Main idea
 
 Ombra uses the source file as memory.
