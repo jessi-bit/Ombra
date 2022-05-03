@@ -69,19 +69,16 @@ module Interpreter =
   // ---------------------------------------------
   // Interpreter
 
-(*
-let rec eval (env: env) e =
-    match e with
-        | Call(op, es) ->
-            match op with
-                | "+" -> List.reduce (+) (eval_list env es)
-                | "max" -> List.reduce max (eval_list env es)
-                | _ -> failwith "not implemented"
-        | K i -> K i
-        | _ -> failwith "to do"
+  let rec eval (env: env) e =
+      match e with
+          | Call(op, es) ->
+              match op with
+                  | "+" -> List.reduce (+) (eval_list env es)
+                  | "max" -> List.reduce max (eval_list env es)
+                  | _ -> failwith "not implemented"
+          | K i -> K i
+          | _ -> failwith "to do"
 
-and eval_list env = function
-    | [] -> []
-    | e :: es -> eval env e :: (eval_list env es)
-
-*)
+  and eval_list env = function
+      | [] -> []
+      | e :: es -> eval env e :: (eval_list env es)
