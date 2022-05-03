@@ -1,59 +1,3 @@
-module Interpreter
-
-type var = string
-type op = string
-
-type exp =
-    | V of var
-    | K of int
-    | Ite of exp * exp * exp
-    | Define of var * exp
-    | Call of op * exp list
-
-type env = Map<var,int>
-
-let rec eval (env: env) e =
-    match e with
-        | Call(op, es) ->
-            match op with
-                | "+" -> List.reduce (+) (eval_list env es)
-                | "max" -> List.reduce max (eval_list env es)
-                | _ -> failwith "not implemented"
-        | K i -> K i
-        | _ -> failwith "to do"
-
-and eval_list env = function
-    | [] -> []
-    | e :: es -> eval env e :: (eval_list env es)
-
-
-
-let a = Call ("+", [(K 41); (K 1); Call ("max", [(K 1); (K 2)])])
-let myenv: env = Map.empty
-
-
-
-(*
-DOMANDE PER MOMIGLIANO
-
-Qui abbiamo una diatriba tra me e Jessica:
-    * secondo Alberto stiamo acquistando in correttezza perdendo leggibilita',
-    pero' e' un tradeoff che puo' portare a benefici, ad esempio che il parser
-    genera codice che puo' essere controllato tramite static analysis (credo)
-    * secondo Jessica e' meglio far fare il lavoro di type check ad una
-    funzione, come visto a lezione e non ai tipi
-
-type summable =
-    | F of float
-    | S of string
-
-type summableOp =
-    | Sum of summableOp * summableOp
-    | SumOp of summable
-
-let test = Sum (SumOp (F 1.0), Sum (SumOp (F 1.0), SumOp (F 40.0)))
-*)
-
 (*
 Funzioni definite per Ombra in F#
 
@@ -68,7 +12,7 @@ eq
 not
 to-list
 to-string
-
+lambda (?)
 
 Strutture dati:
 float
@@ -78,7 +22,66 @@ list
 
 Non creiamo delle funzioni ad hoc per le stringhe perche' sfruttuamo le funzioni che abbiamo
 gia' per le liste e forniamo funzioni per passare da stringa a lista:
-ILJESSICA -> (I L J E S S I C A)
-(I L J E S S I C A) -> ILJESSICA
+JESSICA -> (J E S S I C A)
+(J E S S I C A) -> JESSICA
 *)
 
+
+module Interpreter =
+
+  // ---------------------------------------------
+  // Types
+
+  type var = V of string
+  type op = O of string
+
+  type value =
+      | V of var
+      | K of int
+      | B of bool
+      | S of string
+
+  type exp =
+      | Value of value
+      // che era Ite? Iterator? :/
+      | Ite of exp * exp * exp
+      | Define of var * exp
+      | FunCall of op * exp list
+
+  type env = E of Map<var, value>
+
+  // ---------------------------------------------
+  // Example ASTs
+
+  // Forse qui ho esagerato, cosa ne pensi?
+  // E' che mi piaceva la separazione tra value e exp... pero' porta
+  // a questo risultato, cioe' al wrap di K 41 dentro un Value
+  let sum = FunCall (O "+", [Value (K 41); Value (K 1)])
+
+  let sumWithMax = FunCall (O "+", [Value (K 41); Value (K 1);
+                           FunCall (O "max", [Value (K 1); Value (K 2)])])
+
+  // qui ho aggiunto il type constructor cosi non serve specificare il tipo,
+  // pero' boh
+  let myenv = E Map.empty
+
+
+  // ---------------------------------------------
+  // Interpreter
+
+(*
+let rec eval (env: env) e =
+    match e with
+        | Call(op, es) ->
+            match op with
+                | "+" -> List.reduce (+) (eval_list env es)
+                | "max" -> List.reduce max (eval_list env es)
+                | _ -> failwith "not implemented"
+        | K i -> K i
+        | _ -> failwith "to do"
+
+and eval_list env = function
+    | [] -> []
+    | e :: es -> eval env e :: (eval_list env es)
+
+*)
