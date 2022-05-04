@@ -1,3 +1,4 @@
 interpreter/obj/**/*
 interpreter/bin/**/*
 interpreter/.ionide/**/*
+.ionide

@@ -58,13 +58,20 @@ type env = E of Map<var, value>
 let rec eval (env: env) e =
     match e with
         | FunCall(op, es) ->
+            let res = evalList env es
             match op with
                 // TODO + concatena stringhe?
                 | O "+" ->
-
-
-                    Value (K (List.reduce (+) (evalList env es)))
-                | O "max" -> Value (K (List.reduce max (evalList env es)))
+                    let res2 = List.map (fun x -> match x with
+                                                    | Value (K i) -> i
+                                                    | _ -> failwith "toThink") res
+                    Value (K (List.reduce (+) res2))
+                | O "max" -> 
+                    let res2 = List.map (fun x -> match x with
+                                                    | Value (K i) -> i
+                                                    | _ -> failwith "toThink") res
+                    Value (K (List.reduce (max) res2))
+                    
                 | _ -> failwith "not implemented"
         | Value (K k) -> Value (K k)
         | _ -> failwith "to do"
