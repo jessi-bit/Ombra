@@ -1,4 +1,4 @@
-interpreter/obj/**/*
-interpreter/bin/**/*
-interpreter/.ionide/**/*
+*/obj/**/*
+*/bin/**/*
+*/.ionide/**/*
 .ionide
