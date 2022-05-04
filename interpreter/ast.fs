@@ -26,59 +26,69 @@ JESSICA -> (J E S S I C A)
 (J E S S I C A) -> JESSICA
 *)
 
-
-module Interpreter =
-
-  // ---------------------------------------------
-  // Types
-
-  type var = V of string
-  type op = O of string
-
-  type value =
-      | V of var
-      | K of int
-      | B of bool
-      | S of string
-
-  type exp =
-      | Value of value
-      // che era Ite? Iterator? :/
-      | Ite of exp * exp * exp
-      | Define of var * exp
-      | FunCall of op * exp list
-
-  type env = E of Map<var, value>
-
-  // ---------------------------------------------
-  // Example ASTs
-
-  // Forse qui ho esagerato, cosa ne pensi?
-  // E' che mi piaceva la separazione tra value e exp... pero' porta
-  // a questo risultato, cioe' al wrap di K 41 dentro un Value
-  let sum = FunCall (O "+", [Value (K 41); Value (K 1)])
-
-  let sumWithMax = FunCall (O "+", [Value (K 41); Value (K 1);
-                           FunCall (O "max", [Value (K 1); Value (K 2)])])
-
-  // qui ho aggiunto il type constructor cosi non serve specificare il tipo,
-  // pero' boh
-  let myenv = E Map.empty
+// ---------------------------------------------
+// Types
 
 
-  // ---------------------------------------------
-  // Interpreter
+module AST
 
-  let rec eval (env: env) e =
-      match e with
-          | Call(op, es) ->
-              match op with
-                  | "+" -> List.reduce (+) (eval_list env es)
-                  | "max" -> List.reduce max (eval_list env es)
-                  | _ -> failwith "not implemented"
-          | K i -> K i
-          | _ -> failwith "to do"
+type var = V of string
+type op = O of string
 
-  and eval_list env = function
-      | [] -> []
-      | e :: es -> eval env e :: (eval_list env es)
+type value =
+    | K of int
+    | B of bool
+    | S of string
+
+type exp =
+    | Value of value
+    | Var of var
+    | Ite of exp * exp * exp // if then else
+    | Define of var * exp
+    | FunCall of op * exp list
+
+type env = E of Map<var, value>
+
+// ---------------------------------------------
+// Interpreter
+
+// REMINDER:
+// If we get to this function it means we already type checked
+// the expression so it's safe to make assumptions
+let rec eval (env: env) e =
+    match e with
+        | FunCall(op, es) ->
+            match op with
+                // TODO + concatena stringhe?
+                | O "+" ->
+
+
+                    Value (K (List.reduce (+) (evalList env es)))
+                | O "max" -> Value (K (List.reduce max (evalList env es)))
+                | _ -> failwith "not implemented"
+        | Value (K k) -> Value (K k)
+        | _ -> failwith "to do"
+
+and evalList env = function
+    | [] -> []
+    | exp::exps -> (eval env exp) :: (evalList env exps)
+
+
+// qui ho aggiunto il type constructor cosi non serve specificare il tipo,
+// pero' boh
+let emptyEnv = E Map.empty
+
+// ---------------------------------------------
+// Example ASTs
+
+// Questi li ho spostati qui perche' poi l'idea e' di metterli in un
+// modulo a parte dove faremo i test, e li serviranno quindi anche da doc
+
+// Forse qui ho esagerato, cosa ne pensi?
+// E' che mi piaceva la separazione tra value e exp... pero' porta
+// a questo risultato, cioe' al wrap di K 41 dentro un Value
+let sum = FunCall (O "+", [Value (K 41); Value (K 1)])
+
+//let sumWithMax = FunCall (O "+", [Value (K 41); Value (K 1);
+//                         FunCall (O "max", [Value (K 1); Value (K 2)])])
+
