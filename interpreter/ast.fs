@@ -120,17 +120,6 @@ and evalList env = function
     | [] -> []
     | exp::exps -> (eval env exp) :: (evalList env exps)
 
-(*
-((lambda (x) 
-    ((lambda (y)
-        (+ x y)
-    )) 1) 41)
-*)
-let outerEnv = E (Map.add (V "x") (K 41) Map.empty)
-let innerEnv = E (Map.add (V "y") (K 1) Map.empty)
-let myLambda = Lambda (outerEnv, [Lambda (innerEnv, [FunCall (O "+", [Var(V "x"); Var (V "y")] )])] ) //idea -> 1 + y
-
-
 // qui ho aggiunto il type constructor cosi non serve specificare il tipo,
 // pero' boh
 let emptyEnv = E Map.empty
