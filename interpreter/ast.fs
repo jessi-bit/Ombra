@@ -50,13 +50,16 @@ type env = E of Map<var, value>
 
 //IDEA : local env + global env -> in case of lambda the local env must be chacked first and if there's no
 // match the global env can be checked. If there's no match at all the type checker must be return error
-type exp =
+
+// JessiBit's idea: in Lisp everything is a list, so code it accordingly
+type exp = expression list
+and expression =
     | Value of value
     | Var of var
     | Ite of exp * exp * exp // if then else
-    | Define of var * exp
-    | FunCall of op * exp list
-    | Lambda of env * exp list
+    // | Define of var * exp // we will use a lambda to mimick a def
+    | FunCall of op * exp
+    | Lambda of env * exp
 
 // ---------------------------------------------
 // Environment
@@ -119,6 +122,7 @@ let rec eval (env: env) e =
 and evalList env = function
     | [] -> []
     | exp::exps -> (eval env exp) :: (evalList env exps)
+
 
 // qui ho aggiunto il type constructor cosi non serve specificare il tipo,
 // pero' boh
