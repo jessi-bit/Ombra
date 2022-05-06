@@ -64,12 +64,18 @@ type exp =
 let globalEnv = E (Map.add (V "x") (K 2) Map.empty)
 exception NotFound of var
 
+let print (E env) =
+    Map.iter (fun k v -> printf "key: %A - value: %A\n" k v) env
+
 let find var (E env) =
     try
-        printf "%A\n" var
         Map.find var env
     with 
         NotFound var -> printfn "Not found %A" var; K -8
+
+let intersect (E outer) (E inner) =
+    let res = Map.fold (fun acc k v -> Map.add k v acc) outer inner
+    E res
 
 // ---------------------------------------------
 // Interpreter
@@ -101,11 +107,11 @@ let rec eval (env: env) e =
                     
                 | _ -> failwith "not implemented"
         | Value (K k) -> Value (K k)
-        | Lambda (e, exps) as lambda ->   //((lambda (x y) (+ x y 3)) 1 2)
-            match exps with               // (lambda (x) (+ x (lambda y (y + 1))) 5)
+        | Lambda (envl, exps) as lambda ->
+            match exps with
                 | [] -> lambda
                 | head :: _ ->
-                    eval e head 
+                    eval (intersect env envl) head
         | Var x ->
             Value (find x env)
         | _ -> failwith "to do"
@@ -122,7 +128,6 @@ and evalList env = function
 *)
 let outerEnv = E (Map.add (V "x") (K 41) Map.empty)
 let innerEnv = E (Map.add (V "y") (K 1) Map.empty)
-
 let myLambda = Lambda (outerEnv, [Lambda (innerEnv, [FunCall (O "+", [Var(V "x"); Var (V "y")] )])] ) //idea -> 1 + y
 
 
