@@ -35,17 +35,16 @@ let TestMax () =
 [<Test>]
 let TestLamdaSimple () =
     (*
-    ((lambda (x)
-      ((lambda (y)
+      ((lambda (x y)
         (+ x y)
-      )) 1) 41)
+      ) 1 41)
     *)
-    let outerEnv = E (Map.add (V "x") (K 15) Map.empty)
-    let innerEnv = E (Map.add (V "y") (K 18) Map.empty)
-    let myLambda = Lambda (outerEnv, [Lambda (innerEnv, [FunCall (O "+", [Var(V "x"); Var (V "y")] )])] )
+    let env = E (Map.add (V "x") (K 15) (Map.add (V "y") (K 18) Map.empty))
+    let funCall = FunCall (O "+", [Var(V "x"); Var (V "y")] )
+    let lambdaDef = LambdaDef funCall
+    let lambda = LambdaInv (env, lambdaDef)
 
-    let env = (emptyEnv)
-    match (eval env myLambda) with
+    match (eval env lambda) with
         | Value (K k) -> Assert.AreEqual (33, k)
         | _ -> Assert.Fail()
     Assert.Pass()

@@ -59,7 +59,10 @@ and expression =
     | Ite of exp * exp * exp // if then else
     // | Define of var * exp // we will use a lambda to mimick a def
     | FunCall of op * exp
-    | Lambda of env * exp
+    // Lambda inv should not be "of" expression, but ideally of LambdaReady
+    | LambdaInv of env * exp
+    | LambdaReady of (env -> expression)
+    | LambdaDef of exp
 
 // ---------------------------------------------
 // Environment
@@ -110,15 +113,18 @@ let rec eval (env: env) e =
                     
                 | _ -> failwith "not implemented"
         | Value (K k) -> Value (K k)
-        | Lambda (envl, exps) as lambda ->
+        | LambdaDef exps as lambda ->
             match exps with
                 | [] -> lambda
                 | head :: _ ->
-                    eval (intersect env envl) head
+                    LambdaReady (fun (env2) -> eval (intersect env env2) head)
+        | LambdaInv (env, exp) ->
+            match exp with
+                | LambdaReady lambda -> lambda env
+                | _ -> failwith "Boh"
         | Var x ->
             Value (find x env)
         | _ -> failwith "to do"
-
 and evalList env = function
     | [] -> []
     | exp::exps -> (eval env exp) :: (evalList env exps)
