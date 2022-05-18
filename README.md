@@ -4,7 +4,29 @@ A Lisp made with :heart: by [JessiBit](https://github.com/jessi-bit) and [lazywi
 
 ## Usage
 
-## Supported operations
+## Plan
+
+Implement the following 
+
+[ ] +
+[ ] -
+[ ] *
+[ ] /
+[ ] cons
+[ ] car
+[ ] cdr
+[ ] eq
+[ ] not
+[ ] to-list
+[ ] to-string
+[ ] lambda
+
+Data structures: 
+
+[ ] float
+[ ] bool
+[ ] string
+[ ] list
 
 ## Tasks
 

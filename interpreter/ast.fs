@@ -1,34 +1,5 @@
-(*
-Funzioni definite per Ombra in F#
-
-+
--
-*
-/
-cons
-car
-cdr
-eq
-not
-to-list
-to-string
-lambda (?)
-
-Strutture dati:
-float
-bool
-string
-list
-
-Non creiamo delle funzioni ad hoc per le stringhe perche' sfruttuamo le funzioni che abbiamo
-gia' per le liste e forniamo funzioni per passare da stringa a lista:
-JESSICA -> (J E S S I C A)
-(J E S S I C A) -> JESSICA
-*)
-
 // ---------------------------------------------
 // Types
-
 
 module AST
 
@@ -41,17 +12,9 @@ type value =
     | S of string
 
 type env = E of Map<var, value>
-//TODO:add lambda  
-//(fun x -> x + 1) (lambda (x) (+ x 1)))  
-//((lambda (x y) (+ x y 3)) 1 2)
-//((lambda (x y) (+ x y 3)) x y)
-//Var list * exp list 
-// Lambda ([x, y]; [Ite("ZioCaro", FunCall (("+") [Var x; Var y]; Def (Var pi, K 3.14)]
-
-//IDEA : local env + global env -> in case of lambda the local env must be chacked first and if there's no
-// match the global env can be checked. If there's no match at all the type checker must be return error
 
 // JessiBit's idea: in Lisp everything is a list, so code it accordingly
+// TODO refactor exp in exps
 type exp = expression list
 and expression =
     | Value of value
@@ -59,10 +22,11 @@ and expression =
     | Ite of exp * exp * exp // if then else
     // | Define of var * exp // we will use a lambda to mimick a def
     | FunCall of op * exp
-    // Lambda inv should not be "of" expression, but ideally of LambdaReady
-    | LambdaInv of env * exp
-    | LambdaReady of (env -> expression)
     | LambdaDef of exp
+    // LambdaInv should not be "of" expression, but ideally of LambdaDef
+    | LambdaReady of (env -> expression)
+    // LambdaInv should not be "of" expression, but ideally of LambdaDef
+    | LambdaInv of env * expression
 
 // ---------------------------------------------
 // Environment
@@ -118,9 +82,9 @@ let rec eval (env: env) e =
                 | [] -> lambda
                 | head :: _ ->
                     LambdaReady (fun (env2) -> eval (intersect env env2) head)
-        | LambdaInv (env, exp) ->
-            match exp with
-                | LambdaReady lambda -> lambda env
+        | LambdaInv (env, expression) ->
+            match expression with
+                | LambdaDef (head::_) -> eval env head
                 | _ -> failwith "Boh"
         | Var x ->
             Value (find x env)
