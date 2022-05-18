@@ -50,7 +50,7 @@ let TestLamdaSimple () =
     (*
       ((lambda (x y)
         (+ x y)
-      ) 1 41)
+      ) 15 18)
     *)
     let env = E (Map.add (V "x") (K 15) (Map.add (V "y") (K 18) Map.empty))
     let funCall = FunCall (O "+", [Var(V "x"); Var (V "y")] )
@@ -68,7 +68,6 @@ let TestLamdaSimple () =
 //       ((lambda (sum n)
 //         (sum n 41) (lambda (a b) (+ a b)) 1))
 //     *)
-
 //     let funCall = FunCall (O "+", [Var(V "a"); Var (V "b")] )
 //     let lambdaSum = LambdaDef [funCall]
 
