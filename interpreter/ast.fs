@@ -88,7 +88,6 @@ and plus exp env =
                 | _ -> plus (eval head env) env
         | _ -> failwith "Not an exp list"
 
-
 and lambda args env = //Function (List args)
     match args with
         | List (head :: body) ->
@@ -96,11 +95,12 @@ and lambda args env = //Function (List args)
                 | List parms ->                     
                     let params' = parms |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI") //from list exp to List vars
                     Function (fun values innerEnv ->
-                            let values' = [values] |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI")
-                            let newEnv = E (List.zip params' values' |> Map.ofList)
+                            printf "%A VALUES" body;
+                            //let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI2")
+                            //let newEnv = E (List.zip params' values' |> Map.ofList)
                             // TODO we should evaluate the whole body
                             // TODO we have to merge both envs
-                            eval (List.last body) newEnv)
+                            eval (List.last body) innerEnv)
                 | _ -> failwith "parms of lambda must be a list"
         | _ -> failwith "A function must be a list"
 
