@@ -19,7 +19,7 @@ type exp =
     | Value of value
     | Var of var
     | Symbol of string
-    | Function of (exp list -> env -> exp)
+    | Function of (exp -> env -> exp)
     | List of exp list
 
 // ---------------------------------------------
@@ -41,14 +41,21 @@ let intersect (E outer) (E inner) =
     E res
 
 // ---------------------------------------------
+// Utility
+
+// TODO write fail with sprintf
+
+
+// ---------------------------------------------
 // Interpreter
+//
+// TODO does adding all failWiths make this a defensive interpreter?
 
 // REMINDER:
 // If we get to this stage it means we already type checked
 // the expression so it's safe to make assumptions
 
 let rec eval exps env =
-    printf "EVAL --- %A\n" exps
     match exps with
         | Value (K k) -> Value (K k)
         | Var x -> Value (find x env)
@@ -57,36 +64,36 @@ let rec eval exps env =
                           | None -> failwith "symbol is not implemented"
         | List (exp::exps) ->
             match eval exp env with
-                | Function funx -> funx exps env
+                | Function funx -> funx (List exps) env
                 | _ -> failwith "expr is not a function"
         | _ -> failwith "wat"
 
 and plus exp env =
     match exp with
-        | [] -> Value (K 0)
+        | List [] -> Value (K 0)
         // TODO Find variable in env
-        | head::tail ->
+        | List (head::tail) ->
             match head with
-                | (Value (K k)) -> let (Value (K k')) = plus tail env
+                | (Value (K k)) -> let (Value (K k')) = plus (List tail) env
                                    Value (K (k + k'))
                 // TODO array hack, fix!!!
-                | _ -> plus [(eval head env)] env
+                | _ -> plus (eval head env) env
 
-and lambda args env =
-    match args with
-        | (List parameters)::body ->
-            let params' = parameters |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI")
-            Function (fun values innerEnv ->
-                      let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI")
-                      let newEnv = E (List.zip params' values' |> Map.ofList)
-                      // TODO we should evaluate the whole body
-                      // TODO we have to merge both envs
-                      eval (List.last body) newEnv)
+// and lambda args env =
+//     match args with
+//         | List ((List parameters)::body) ->
+//             let params' = parameters |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI")
+//             Function (fun values innerEnv ->
+//                       let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI")
+//                       let newEnv = E (List.zip params' values' |> Map.ofList)
+//                       // TODO we should evaluate the whole body
+//                       // TODO we have to merge both envs
+//                       eval (List.last body) newEnv)
 
-and symbols =
-    Map.empty
-        .Add("+", Function plus)
-        .Add("lambda", Function lambda)
+// and symbols =
+//     Map.empty
+//         .Add("+", Function plus)
+//         .Add("lambda", Function lambda)
 
 // ---------------------------------------------
 
