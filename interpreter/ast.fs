@@ -18,7 +18,6 @@ let emptyEnv = E Map.empty
 type exp =
     | Value of value
     | Var of var
-    // TODO remove me?
     | Symbol of string
     | Function of (exp list -> env -> exp)
     | List of exp list
@@ -48,50 +47,59 @@ let intersect (E outer) (E inner) =
 // If we get to this stage it means we already type checked
 // the expression so it's safe to make assumptions
 
-
 let rec eval exps env =
+    printf "EVAL --- %A\n" exps
     match exps with
         | Value (K k) -> Value (K k)
         | Var x -> Value (find x env)
+        | Symbol s -> match Map.tryFind s symbols with
+                          | Some (Function f) -> Function f
+                          | None -> failwith "symbol is not implemented"
         | List (exp::exps) ->
-            match exp with
+            match eval exp env with
                 | Function funx -> funx exps env
-                | _ -> List (exp :: List.map (fun exp -> eval exp env) exps)
-        | _ ->
-            printf "%A\n" exps
-            failwith "error 2"
+                | _ -> failwith "expr is not a function"
+        | _ -> failwith "wat"
 
-// ---------------------------------------------
-// Native functions
-
-let rec plus exp env =
+and plus exp env =
     match exp with
         | [] -> Value (K 0)
         // TODO Find variable in env
-        | (Value (K k))::tail ->
-            let (Value (K k')) = plus tail env
-            Value (K (k + k'))
-        | _ ->
-            printf "%A\n" exp
-            failwith "cannot call sum on this"
+        | head::tail ->
+            match head with
+                | (Value (K k)) -> let (Value (K k')) = plus tail env
+                                   Value (K (k + k'))
+                // TODO array hack, fix!!!
+                | _ -> plus [(eval head env)] env
 
-let lambda body env =
-    (fun args ->
-     let innerEnv = intersect env args
-     eval body innerEnv)
+and lambda args env =
+    match args with
+        | (List parameters)::body ->
+            let params' = parameters |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI")
+            Function (fun values innerEnv ->
+                      let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI")
+                      let newEnv = E (List.zip params' values' |> Map.ofList)
+                      // TODO we should evaluate the whole body
+                      // TODO we have to merge both envs
+                      eval (List.last body) newEnv)
 
+and symbols =
+    Map.empty
+        .Add("+", Function plus)
+        .Add("lambda", Function lambda)
 
-let sumAst = List [(Function plus); (Value (K 1)); (Value (K 41))]
+// ---------------------------------------------
+
+let sumAst = List [Symbol "+"; (Value (K 1)); (Value (K 41))]
 let res = eval sumAst (emptyEnv)
 
+// TODO add a quote symbol
 let listAst = List [(Value (K 1)); (Value (K 41))]
 let res2 = eval listAst (emptyEnv)
 
-let onlyFunctionList = Function plus
-
 (*
-((lambda (funx)
- (funx 41 1)
-) (lambda (a b) (+ a b)))
+(+ 1 ((lambda () 41)))
 *)
-List [(Function lambda) (List [(Function plus); (Var a); (Var b)])]
+let invokedLambda = List [List [Symbol "lambda"; List []; Value (K 41)]]
+let astUsingLambda = List [Symbol "+"; (Value (K 1)); invokedLambda]
+let res3 = eval astUsingLambda (emptyEnv)
