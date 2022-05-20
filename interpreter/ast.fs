@@ -79,6 +79,7 @@ let rec eval exps env =
 and plus exp env =
     match exp with
         | List [] -> Value (K 0)
+        | Value (K k) as value -> value
         // TODO Find variable in env
         | List (head::tail) ->
             match head with
@@ -95,7 +96,6 @@ and lambda args env = //Function (List args)
                 | List parms ->                     
                     let params' = parms |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI") //from list exp to List vars
                     Function (fun values innerEnv ->
-                            printf "%A VALUES" body;
                             //let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI2")
                             //let newEnv = E (List.zip params' values' |> Map.ofList)
                             // TODO we should evaluate the whole body
