@@ -53,6 +53,9 @@ let intersect (E outer) (E inner) =
 
 // TODO write fail with sprintf
 
+let err msg exp env =
+    failwith (sprintf msg exp env)
+
 
 // ---------------------------------------------
 // Interpreter
@@ -64,6 +67,7 @@ let intersect (E outer) (E inner) =
 // the expression so it's safe to make assumptions
 
 let rec eval exps env =
+    // printf "EVAL\n  exps: %A\n  env: %A\n" exps env
     match exps with
         | Value (K k) -> Value (K k)
         | Var x -> Value (find x env) //try find
@@ -73,21 +77,23 @@ let rec eval exps env =
         | List (exp::exps) ->
             match eval exp env with
                 | Function funx -> funx (List exps) env
-                | _ -> failwith "expr is not a function"
+                | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
         | _ -> failwith "wat"
 
 and plus exp env =
     match exp with
         | List [] -> Value (K 0)
         | Value (K k) as value -> value
-        // TODO Find variable in env
+        | Var x ->
+            printf "FINDING %A IN %A\n" x env
+            Value (find x env) //try find
         | List (head::tail) ->
             match head with
                 | (Value (K k)) -> let (Value (K k')) = plus (List tail) env
                                    Value (K (k + k'))
                 // TODO array hack, fix!!!
                 | _ -> plus (eval head env) env
-        | _ -> failwith "Not an exp list"
+        | _ -> err "error %A %A" exp env
 
 and lambda args env = //Function (List args)
     match args with
@@ -96,12 +102,16 @@ and lambda args env = //Function (List args)
                 | List parms ->                     
                     let params' = parms |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI") //from list exp to List vars
                     Function (fun values innerEnv ->
-                            //let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI2")
-                            //let newEnv = E (List.zip params' values' |> Map.ofList)
-                            // TODO we should evaluate the whole body
-                            // TODO we have to merge both envs
-                            eval (List.last body) innerEnv)
-                | _ -> failwith "parms of lambda must be a list"
+                              match values with
+                                  | List values ->
+                                    let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI2")
+                                    let newEnv = E (List.zip params' values' |> Map.ofList)
+                                    let newEnv' = intersect env newEnv
+                                    // TODO we should evaluate the whole body
+                                    // TODO we have to merge both envs
+                                    printf "ENV %A\nINNERENV %A\n NEWENV %A\n" env innerEnv newEnv'
+                                    List.reduce (fun _ exp -> eval exp newEnv') body)
+                | _ -> failwith "parmeters of lambda must be a list"
         | _ -> failwith "A function must be a list"
 
 and symbols =
@@ -128,3 +138,13 @@ let res2 = eval listAst (emptyEnv)
 let invokedLambda = List [List [Symbol "lambda"; List []; Value (K 41)]]
 let astUsingLambda = List [Symbol "+"; (Value (K 1)); invokedLambda]
 let res3 = eval astUsingLambda (emptyEnv)
+
+let varAst = Var (V "x")
+let res5 = eval varAst (E (Map.add (V "x") (K 42) Map.empty))
+
+(*
+(+ 1 ((lambda (x) x) 41))
+*)
+let invokedLambda2 = List [List [Symbol "lambda"; List [Var (V "x")]; Var (V "x")]; (Value (K 41))]
+let astUsingLambda2 = List [Symbol "+"; (Value (K 1)); invokedLambda2]
+let res4 = eval astUsingLambda2 (emptyEnv)
