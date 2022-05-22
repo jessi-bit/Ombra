@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\interpreter\interpreter.fsproj" />
+    <ProjectReference Include="../interpreter/interpreter.fsproj" />
   </ItemGroup>
 
 </Project>
