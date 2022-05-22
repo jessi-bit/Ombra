@@ -91,7 +91,7 @@ and plus exp env =
             Value (find x env) 
         | List ((head::tail) as lst) ->
             match eval head env with
-                | (Value (K k)) -> let (Value (K k')) = plus (List tail) env //non so se funge x tre valori
+                | (Value (K k)) -> let (Value (K k')) = plus (List tail) env 
                                    Value (K (k + k'))
                 // TODO array hack, fix!!!
                 | _ -> plus (eval head env) env
