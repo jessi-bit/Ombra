@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="*Test*.fs" />
+    <!-- DONT USE * WILDCARDS!!! -->
+    <Compile Include="UnitTests.fs" />
   </ItemGroup>
 
   <ItemGroup>
