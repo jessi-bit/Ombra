@@ -76,6 +76,7 @@ let rec eval exps env =
                           | _ -> failwith "symbol is not implemented"
         | List (exp::exps) ->
             printf "exp %A\n and exps %A\n" exp exps
+            printf "EVAL %A\n" (eval exp env)
             match eval exp env with
                 | Function funx -> funx (List exps) env
                 | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
