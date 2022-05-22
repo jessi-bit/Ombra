@@ -3,3 +3,4 @@
 */.ionide/**/*
 .ionide
 TestResults
+.vscode

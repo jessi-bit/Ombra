@@ -69,12 +69,13 @@ let rec eval exps env =
     // printf "EVAL\n  exps: %A\n  env: %A\n" exps env
     // TODO for some reason symbols should stay here, we can't put it in
     // mutual recursion below or the tests will fail
+    //TODO: Add Equality for the whole language (and think cases)
     let symbols =
         Map.empty
           .Add("+", Function plus)
+          .Add("*", Function mul)
+          .Add("quote", Function quote)
           .Add("lambda", Function lambda)
-
-    printf "EVAL HAS ENV? %A\n" env
 
     match exps with
         | Value (K k) -> Value (K k)
@@ -99,6 +100,22 @@ and plus exp env =
                 | _ -> plus (eval head env) env
 
         | _ -> err "error %A %A" exp env
+and mul exp env =
+    match exp with
+        | List [] -> Value (K 1)
+        | Value (K k) as value -> value
+        | Var x -> Value (find x env)
+        | List ((head::tail) as lst) ->
+            match eval head env with
+                | (Value (K k)) -> let (Value (K k')) = mul (List tail) env 
+                                   Value (K (k * k'))
+                | _ -> plus (eval head env) env
+
+        | _ -> err "error %A %A" exp env
+and quote exp env =
+    match exp with
+        | List [lst] -> printf "%A" lst; lst
+        | _ -> failwith "exp is not a list"
 and lambda args env =
     match args with
         | List (head :: body) ->
@@ -108,7 +125,9 @@ and lambda args env =
                     Function (fun values innerEnv ->
                               match values with
                                   | List values ->
-                                      let values' = values |> List.map (function Value (v) -> v | _ -> failwith "SONO CAZZI2")
+                                      let values' = values |> List.map (fun x -> match eval x env with
+                                                                            | Value x -> x
+                                                                            | _ -> failwith "SONO CAZZI 3")
                                       let innerEnv = E (List.zip params' values' |> Map.ofList)
                                       let newEnv' = intersect env innerEnv
                                       // TODO we have to merge both envs

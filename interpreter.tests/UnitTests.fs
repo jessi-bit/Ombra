@@ -66,3 +66,34 @@ let TestLambdaComplex () =
         | Value (K k) -> Assert.AreEqual (3, k)
         | _ -> Assert.Fail()
     Assert.Pass()
+
+[<Test>]
+let TestLambdaComplex2 () =
+    //((lambda (x y) (+ x y)) 1 ((lambda ((x y) (/ x y)) 2 3)))
+    
+    let parms = List [Var (V "x"); Var (V "y")]
+    let body = List [Symbol "+"; Var (V "x"); Var (V "y")]
+    let body2 = List [Symbol "*"; Var (V "x"); Var (V "y")]
+    let lastParm = List [List [Symbol "lambda"; parms; body2]; Value (K 2); Value (K 3)]
+    let jLambda = List [List [Symbol "lambda"; parms ; body]; Value (K 1); lastParm]
+    let env = E Map.empty
+    match (eval jLambda env) with
+        | Value (K k) -> Assert.AreEqual (7, k)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let rec areEquals (List xs) (List ys) =
+    match (xs, ys) with
+        | [], [] -> true
+        | Value (K k) :: tail1, Value (K k1) :: tail2 -> 
+            k = k1 && (areEquals (List tail1) (List tail2))
+
+[<Test>]
+let TestQuote () =
+    // (quote (1 2 3))
+    let quote = List [Symbol "quote"; List [Value (K 1); Value (K 2); Value (K 3)]]
+    let env = E Map.empty
+    match (eval quote env) with
+        | lst -> Assert.AreEqual (areEquals lst (List [Value (K 1); Value (K 2); Value (K 3)]), true)
+        | _ -> Assert.Fail()
+    Assert.Pass()
