@@ -121,16 +121,23 @@ and lambda args env =
         | List (head :: body) ->
             match head with
                 | List parms ->
-                    let params' = parms |> List.map (function Var (v) -> v | _ -> failwith "SONO CAZZI") //from list exp to List vars
+                    let params' = parms |> extract extractVar //from list exp to List vars
                     Function (fun values innerEnv ->
                               match values with
                                   | List values ->
-                                      let values' = values |> List.map (fun x -> match eval x env with
-                                                                            | Value x -> x
-                                                                            | _ -> failwith "SONO CAZZI 3")
+                                      let values' = values |> extractEval extractValue env
                                       let innerEnv = E (List.zip params' values' |> Map.ofList)
                                       let newEnv' = intersect env innerEnv
-                                      // TODO we have to merge both envs
                                       eval (List.head body) newEnv')
                 | _ -> failwith "parmeters of lambda must be a list"
         | _ -> failwith "A function must be a list"
+and extractVar = function
+    | Var x -> x
+    | _ -> failwith "error"
+and extractValue = function
+    | Value v -> v
+    | _ -> failwith "Error"
+and extract f xs =
+    xs |> List.map f
+and extractEval f env xs =
+    xs |> List.map (fun x -> f (eval x env))
