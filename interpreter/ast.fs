@@ -55,6 +55,16 @@ let intersect (E outer) (E inner) =
 let err msg exp env =
     failwith (sprintf msg exp env)
 
+// -----------------------------------
+// lifting Monad
+// 
+let mapInt funct = function
+    | Value (K k) -> Value (K (funct k))
+    | _ -> failwith "not an int"
+
+let returnMonad = function
+    | Value (K k) -> k
+    | _ -> failwith "notAnint"
 
 // ---------------------------------------------
 // Interpreter
@@ -94,10 +104,8 @@ and plus exp env =
         | Value (K k) as value -> value
         | Var x -> Value (find x env)
         | List ((head::tail) as lst) ->
-            match eval head env with
-                | (Value (K k)) -> let (Value (K k')) = plus (List tail) env 
-                                   Value (K (k + k'))
-                | _ -> plus (eval head env) env
+            let fst = returnMonad (mapInt id (eval head env))
+            mapInt (fun x -> x + fst) (plus (List tail) env)
 
         | _ -> err "error %A %A" exp env
 and mul exp env =
