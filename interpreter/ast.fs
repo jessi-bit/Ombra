@@ -62,7 +62,7 @@ let mapInt funct = function
     | Value (K k) -> Value (K (funct k))
     | _ -> failwith "not an int"
 
-let returnMonad = function
+let unwrapInt = function
     | Value (K k) -> k
     | _ -> failwith "notAnint"
 
@@ -98,28 +98,19 @@ let rec eval exps env =
                 | Function funx -> funx (List exps) env
                 | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
         | _ -> failwith "wat"
+and intOp exp env defValue funct expFun =
+    match exp with
+        | List [] -> Value (K defValue)
+        | Value (K _) -> exp
+        | Var x -> Value (find x env)
+        | List (head::tail) ->
+            let fst = unwrapInt (eval head env)
+            mapInt (fun x -> funct fst x) (expFun (List tail) env)
+        | _ -> err "error %A %A" exp env
 and plus exp env =
-    match exp with
-        | List [] -> Value (K 0)
-        | Value (K k) as value -> value
-        | Var x -> Value (find x env)
-        | List ((head::tail) as lst) ->
-            let fst = returnMonad (mapInt id (eval head env))
-            mapInt (fun x -> x + fst) (plus (List tail) env)
-
-        | _ -> err "error %A %A" exp env
+    intOp exp env 0 (+) plus
 and mul exp env =
-    match exp with
-        | List [] -> Value (K 1)
-        | Value (K k) as value -> value
-        | Var x -> Value (find x env)
-        | List ((head::tail) as lst) ->
-            match eval head env with
-                | (Value (K k)) -> let (Value (K k')) = mul (List tail) env 
-                                   Value (K (k * k'))
-                | _ -> plus (eval head env) env
-
-        | _ -> err "error %A %A" exp env
+    intOp exp env 1 (*) mul
 and quote exp env =
     match exp with
         | List [lst] -> printf "%A" lst; lst
