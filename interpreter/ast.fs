@@ -84,6 +84,7 @@ let rec eval exps env =
         Map.empty
           .Add("+", Function plus)
           .Add("*", Function mul)
+          .Add("-", Function minus)
           .Add("quote", Function quote)
           .Add("lambda", Function lambda)
 
@@ -98,9 +99,10 @@ let rec eval exps env =
                 | Function funx -> funx (List exps) env
                 | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
         | _ -> failwith "wat"
-and intOp exp env defValue funct expFun =
+//Each operation made on ints requires an exp, an env, a function in the real world and a function in the elevated world 
+and intOp exp env funct expFun = 
     match exp with
-        | List [] -> Value (K defValue)
+        | List [] -> Value (K 0)
         | Value (K _) -> exp
         | Var x -> Value (find x env)
         | List (head::tail) ->
@@ -108,9 +110,12 @@ and intOp exp env defValue funct expFun =
             mapInt (fun x -> funct fst x) (expFun (List tail) env)
         | _ -> err "error %A %A" exp env
 and plus exp env =
-    intOp exp env 0 (+) plus
+    intOp exp env (+) plus
 and mul exp env =
-    intOp exp env 1 (*) mul
+    intOp exp env (*) mul
+//TODO: test a minus
+and minus exp env =
+    intOp exp env (-) minus
 and quote exp env =
     match exp with
         | List [lst] -> printf "%A" lst; lst
