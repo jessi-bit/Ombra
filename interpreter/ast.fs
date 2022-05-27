@@ -15,6 +15,7 @@ type env = E of Map<var, value>
 // JessiBit's idea: in Lisp everything is a list, so code it accordingly
 // TODO refactor exp in exps
 type exp =
+    | None
     | Value of value
     | Var of var
     | Symbol of string
@@ -58,13 +59,29 @@ let err msg exp env =
 // -----------------------------------
 // lifting Monad
 // 
-let mapInt funct = function
-    | Value (K k) -> Value (K (funct k))
-    | _ -> failwith "not an int"
+let mapInt funct exp1 exp2 =
+    match exp1, exp2 with
+        | Value (K k), Value (K k2) -> Value (K (funct k k2))
+        | Value (K k), None -> Value (K k)
+        | _ -> failwith "not an int"
 
 let unwrapInt = function
     | Value (K k) -> k
     | _ -> failwith "notAnint"
+
+let qualcosa funx operand exp =
+    match exp with
+        | None -> operand
+        | Value (K k) -> funx operand k
+        | _ -> failwith "CAZZO"
+
+// let neut (op: int -> int -> int) = 
+//     match op with
+//         | (+) -> Value (K (0 + 0))
+//         | (-) -> Value (K 0)
+//         | (*) -> Value (K 1)
+//         | (/) -> Value (K 1)
+
 
 // ---------------------------------------------
 // Interpreter
@@ -102,12 +119,11 @@ let rec eval exps env =
 //Each operation made on ints requires an exp, an env, a function in the real world and a function in the elevated world 
 and intOp exp env funct expFun = 
     match exp with
-        | List [] -> Value (K 0)
+        | List [] -> None
         | Value (K _) -> exp
         | Var x -> Value (find x env)
         | List (head::tail) ->
-            let fst = unwrapInt (eval head env)
-            mapInt (fun x -> funct fst x) (expFun (List tail) env)
+            mapInt funct (eval head env) (expFun (List tail) env)
         | _ -> err "error %A %A" exp env
 and plus exp env =
     intOp exp env (+) plus
@@ -128,12 +144,14 @@ and lambda args env =
                     let params' = parms |> extract extractVar //from list exp to List vars
                     Function (fun values innerEnv ->
                               match values with
-                                  | List values ->
+                                    | List values ->
                                       let values' = values |> extractEval extractValue env
                                       let innerEnv = E (List.zip params' values' |> Map.ofList)
                                       let newEnv' = intersect env innerEnv
-                                      eval (List.head body) newEnv')
-                | _ -> failwith "parmeters of lambda must be a list"
+                                      eval (List.head body) newEnv'
+                                    | _ -> failwith "Not Implemented")
+                | _ -> failwith"A lambda is a list"
+                
         | _ -> failwith "A function must be a list"
 and extractVar = function
     | Var x -> x

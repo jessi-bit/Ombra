@@ -34,6 +34,16 @@ let TestSumWithVars () =
     Assert.Pass()
 
 [<Test>]
+let TestMul () =
+    // (* 5 5)
+    let exp = List [Symbol "*"; Value (K 5); Value (K 5)]
+    let env = E (Map.empty)
+    match (eval exp env) with
+        | Value (K k) -> Assert.AreEqual (25, k)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
 let TestLambdaBase1 () =
     // (+ 1 ((lambda () 41)))
     let invokedLambda = List [List [Symbol "lambda"; List []; Value (K 41)]]
@@ -69,16 +79,15 @@ let TestLambdaComplex () =
 
 [<Test>]
 let TestLambdaComplex2 () =
-    //((lambda (x y) (+ x y)) 1 ((lambda ((x y) (/ x y)) 2 3)))
+    //((lambda (x y) (+ x y)) 1 ((lambda ((x y) (+ x y)) 2 3)))
     
-    let parms = List [Var (V "x"); Var (V "y")]
     let body = List [Symbol "+"; Var (V "x"); Var (V "y")]
-    let body2 = List [Symbol "*"; Var (V "x"); Var (V "y")]
-    let lastParm = List [List [Symbol "lambda"; parms; body2]; Value (K 2); Value (K 3)]
-    let jLambda = List [List [Symbol "lambda"; parms ; body]; Value (K 1); lastParm]
+    let parms = List [Var (V "x"); Var (V "y")]
+    let paramLambda = List [List [Symbol "lambda"; parms; body]; Value (K 2); Value (K 3)]
+    let jLambda = List [List [Symbol "lambda"; parms ; body]; Value (K 1); paramLambda]
     let env = E Map.empty
     match (eval jLambda env) with
-        | Value (K k) -> Assert.AreEqual (7, k)
+        | Value (K k) -> Assert.AreEqual (6, k)
         | _ -> Assert.Fail()
     Assert.Pass()
 
