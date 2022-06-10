@@ -23,6 +23,16 @@ let TestSum () =
     Assert.Pass()
 
 [<Test>]
+let TestSub () =
+    // (- 43 1)
+    let exp = List [Symbol "-"; Value (K 43); Value (K 1)]
+    let env = (E Map.empty)
+    match (eval exp env) with
+        | Value (K k) -> Assert.AreEqual (42, k)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
 let TestSumWithVars () =
     // env: x = 2, y = 2
     // (+ x y 5)

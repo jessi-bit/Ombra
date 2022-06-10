@@ -22,6 +22,8 @@ type exp =
     | Function of (exp -> env -> exp)
     | List of exp list
 
+type maybe<'a> = Just of 'a | Nothing
+
 // type exp2 =
 //     | Value of value
 //     | Var of var
@@ -32,20 +34,23 @@ type exp =
 // ---------------------------------------------
 // Environment
 
-exception NotFound of var
-
 let print (E env) =
     Map.iter (fun k v -> printf "key: %A - value: %A\n" k v) env
 
 let find var (E env) =
-    try
-        Map.find var env
-    with 
-        NotFound var -> printfn "Not found %A" var; K -8
+    Map.find var env
 
 let intersect (E outer) (E inner) =
     let res = Map.fold (fun acc k v -> Map.add k v acc) outer inner
     E res
+
+let zip vars values =
+    let rec inner vars values =
+        match (vars, values) with
+            | [], [] -> []
+            | head1 :: tail1, head2 :: tail2 -> 
+                (head1, head2) :: inner tail1 tail2
+    inner vars values |> Map.ofList
 
 // ---------------------------------------------
 // Utility
@@ -69,12 +74,6 @@ let unwrapInt = function
     | Value (K k) -> k
     | _ -> failwith "notAnint"
 
-let qualcosa funx operand exp =
-    match exp with
-        | None -> operand
-        | Value (K k) -> funx operand k
-        | _ -> failwith "CAZZO"
-
 // let neut (op: int -> int -> int) = 
 //     match op with
 //         | (+) -> Value (K (0 + 0))
@@ -93,10 +92,9 @@ let qualcosa funx operand exp =
 // the expression so it's safe to make assumptions
 
 let rec eval exps env =
-    // printf "EVAL\n  exps: %A\n  env: %A\n" exps env
     // TODO for some reason symbols should stay here, we can't put it in
     // mutual recursion below or the tests will fail
-    //TODO: Add Equality for the whole language (and think cases)
+    // TODO: Add Equality for the whole language (and think cases)
     let symbols =
         Map.empty
           .Add("+", Function plus)
@@ -107,7 +105,7 @@ let rec eval exps env =
 
     match exps with
         | Value (K k) -> Value (K k)
-        | Var x -> Value (find x env) //try find
+        | Var x -> Value (find x env) // TODO try find
         | Symbol s -> match Map.tryFind s symbols with
                           | Some (Function f) -> Function f
                           | _ -> failwith "symbol is not implemented"
@@ -129,7 +127,6 @@ and plus exp env =
     intOp exp env (+) plus
 and mul exp env =
     intOp exp env (*) mul
-//TODO: test a minus
 and minus exp env =
     intOp exp env (-) minus
 and quote exp env =
@@ -141,17 +138,17 @@ and lambda args env =
         | List (head :: body) ->
             match head with
                 | List parms ->
-                    let params' = parms |> extract extractVar //from list exp to List vars
                     Function (fun values innerEnv ->
                               match values with
                                     | List values ->
-                                      let values' = values |> extractEval extractValue env
+                                      let values' = List.map (fun x -> extractValue (eval x env)) values
+                                      let params' = List.map extractVar parms
+
                                       let innerEnv = E (List.zip params' values' |> Map.ofList)
                                       let newEnv' = intersect env innerEnv
                                       eval (List.head body) newEnv'
                                     | _ -> failwith "Not Implemented")
-                | _ -> failwith"A lambda is a list"
-                
+                | _ -> failwith "A lambda is a list"
         | _ -> failwith "A function must be a list"
 and extractVar = function
     | Var x -> x
@@ -159,7 +156,3 @@ and extractVar = function
 and extractValue = function
     | Value v -> v
     | _ -> failwith "Error"
-and extract f xs =
-    xs |> List.map f
-and extractEval f env xs =
-    xs |> List.map (fun x -> f (eval x env))
