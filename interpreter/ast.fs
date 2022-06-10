@@ -52,8 +52,10 @@ let mapInt funct exp1 exp2 =
         | Value (K k), Value (K k2) -> Value (K (funct k k2))
         | Value (K k), None -> Value (K k)
 
-let unwrapInt = function
-    | Value (K k) -> k
+let extractVar = function
+    | Var x -> x
+let extractValue = function
+    | Value v -> v
 
 // ---------------------------------------------
 // Interpreter
@@ -111,7 +113,4 @@ and lambda args env =
                               let innerEnv = E (List.zip params' values' |> Map.ofList)
                               let newEnv = intersect (intersect env funEnv) innerEnv
                               eval (List.head body) newEnv)
-and extractVar = function
-    | Var x -> x
-and extractValue = function
-    | Value v -> v
+
