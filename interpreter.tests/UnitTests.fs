@@ -66,7 +66,7 @@ let TestLambdaBase1 () =
 
 [<Test>]
 let TestLambdaBase2 () =
-    // (+ 1((lambda (x) x) 41))
+    // (+ 1 ((lambda (x) x) 41))
     let invokedLambda2 = List [List [Symbol "lambda"; List [Var (V "x")]; Var (V "x")]; (Value (K 41))]
     let astUsingLambda2 = List [Symbol "+"; (Value (K 1)); invokedLambda2]
     let env = (E Map.empty)
@@ -90,7 +90,6 @@ let TestLambdaComplex () =
 [<Test>]
 let TestLambdaComplex2 () =
     //((lambda (x y) (+ x y)) 1 ((lambda ((x y) (+ x y)) 2 3)))
-    
     let body = List [Symbol "+"; Var (V "x"); Var (V "y")]
     let parms = List [Var (V "x"); Var (V "y")]
     let paramLambda = List [List [Symbol "lambda"; parms; body]; Value (K 2); Value (K 3)]
@@ -101,11 +100,11 @@ let TestLambdaComplex2 () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
-let rec areEquals (List xs) (List ys) =
+let rec areEqual (List xs) (List ys) =
     match (xs, ys) with
         | [], [] -> true
         | Value (K k) :: tail1, Value (K k1) :: tail2 -> 
-            k = k1 && (areEquals (List tail1) (List tail2))
+            k = k1 && (areEqual (List tail1) (List tail2))
 
 [<Test>]
 let TestQuote () =
@@ -113,6 +112,6 @@ let TestQuote () =
     let quote = List [Symbol "quote"; List [Value (K 1); Value (K 2); Value (K 3)]]
     let env = E Map.empty
     match (eval quote env) with
-        | lst -> Assert.AreEqual (areEquals lst (List [Value (K 1); Value (K 2); Value (K 3)]), true)
+        | lst -> Assert.AreEqual (areEqual lst (List [Value (K 1); Value (K 2); Value (K 3)]), true)
         | _ -> Assert.Fail()
     Assert.Pass()

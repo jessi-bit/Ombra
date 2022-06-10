@@ -22,8 +22,6 @@ type exp =
     | Function of (exp -> env -> exp)
     | List of exp list
 
-type maybe<'a> = Just of 'a | Nothing
-
 // ---------------------------------------------
 // Environment
 
@@ -40,15 +38,15 @@ let intersect (E outer) (E inner) =
 // ---------------------------------------------
 // Utility
 
-// TODO write fail with sprintf
-// and use it everywhere
+// TODO write fail with sprintf and use it everywhere
 
 let err msg exp env =
     failwith (sprintf msg exp env)
 
 // -----------------------------------
 // lifting Monad
-// 
+//
+
 let mapInt funct exp1 exp2 =
     match exp1, exp2 with
         | Value (K k), Value (K k2) -> Value (K (funct k k2))
@@ -82,12 +80,10 @@ let rec eval exps env =
         | Var x -> Value (find x env) // TODO try find
         | Symbol s -> match Map.tryFind s symbols with
                           | Some (Function f) -> Function f
-                          | _ -> failwith "symbol is not implemented"
+                          | _ -> err "Symbol is not implemented\n symbol: %A\n env: %A\n" s env
         | List (exp::exps) ->
             match eval exp env with
                 | Function funx -> funx (List exps) env
-                | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
-        | _ -> failwith "wat"
 and intOp exp env funct expFun =
     match exp with
         | List [] -> None
@@ -103,20 +99,18 @@ and minus exp env =
     intOp exp env (-) minus
 and quote exp env =
     match exp with
-        | List [lst] -> printf "%A" lst; lst
+        | List [lst] -> lst
 and lambda args env =
     match args with
-        | List (head :: body) ->
-            match head with
-                | List parms ->
-                    Function (fun values innerEnv ->
-                              match values with
-                                    | List values ->
-                                      let values' = List.map (fun x -> extractValue (eval x env)) values
-                                      let params' = List.map extractVar parms
-                                      let innerEnv = E (List.zip params' values' |> Map.ofList)
-                                      let newEnv' = intersect env innerEnv
-                                      eval (List.head body) newEnv')
+        | List ((List parms) :: body) ->
+            Function (fun values funEnv ->
+                      match values with
+                            | List values ->
+                              let values' = List.map (fun x -> extractValue (eval x env)) values
+                              let params' = List.map extractVar parms
+                              let innerEnv = E (List.zip params' values' |> Map.ofList)
+                              let newEnv = intersect (intersect env funEnv) innerEnv
+                              eval (List.head body) newEnv)
 and extractVar = function
     | Var x -> x
 and extractValue = function
