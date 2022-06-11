@@ -100,18 +100,49 @@ let TestLambdaComplex2 () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+let isEqual value1 value2 =
+    match (value1, value2) with
+        | Value (K k), Value (K k1) -> k = k1 
+        | Value (B b), Value (B b1) -> b = b1
+        | Value (S s), Value (S s1) -> s = s1
+        | Nil, Nil -> true
+        | _ -> false
+
 let rec areEqual (List xs) (List ys) =
     match (xs, ys) with
         | [], [] -> true
-        | Value (K k) :: tail1, Value (K k1) :: tail2 -> 
-            k = k1 && (areEqual (List tail1) (List tail2))
+        | head1 :: tail1, head2 :: tail2 -> 
+            isEqual head1 head2 && areEqual (List tail1) (List tail2)
+        | _ -> false
+        
 
 [<Test>]
 let TestQuote () =
     // (quote (1 2 3))
     let quote = List [Symbol "quote"; List [Value (K 1); Value (K 2); Value (K 3)]]
     let env = E Map.empty
-    match (eval quote env) with
-        | lst -> Assert.AreEqual (areEqual lst (List [Value (K 1); Value (K 2); Value (K 3)]), true)
-        | _ -> Assert.Fail()
+    let listResult = eval quote env 
+    Assert.AreEqual (areEqual listResult (List [Value (K 1); Value (K 2); Value (K 3)]), true)
     Assert.Pass()
+
+[<Test>]
+let TestConsSimple () =
+    // (cons 1 '(2 3))
+    let quote = List [Symbol "quote"; List [Value (K 2); Value (K 3)]]
+    let cons = List [Symbol "cons"; Value (K 1); quote]
+    let env = E Map.empty
+    let listResult = eval cons env; 
+    Assert.AreEqual (areEqual listResult (List [Value (K 1); Value (K 2); Value (K 3)]), true)
+    Assert.Pass()
+
+[<Test>]
+let TestConsComplex () =
+    // (cons 1 (cons 2 (cons 3 nil)))
+    let sublst1 = List[Symbol "cons"; Value (B true); List[Symbol "cons"; Value (B false); Nil]]
+    let lst = List[Symbol "cons"; Value (B true); sublst1]
+    let env = E Map.empty
+    let listResult = eval lst env; 
+    Assert.AreEqual (areEqual listResult (List [Value (B true); Value (B true); Value (B false); Nil]), true)
+    Assert.Pass()
+
+    

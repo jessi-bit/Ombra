@@ -20,6 +20,7 @@ type exp =
     | Var of var
     | Symbol of string
     | Function of (exp -> env -> exp)
+    | Nil
     | List of exp list
 
 // ---------------------------------------------
@@ -51,12 +52,20 @@ let mapInt funct exp1 exp2 =
     match exp1, exp2 with
         | Value (K k), Value (K k2) -> Value (K (funct k k2))
         | Value (K k), None -> Value (K k)
+        | _ -> None
 
 let extractVar = function
     | Var x -> x
+    | _ -> failwith "won'thappen"
 let extractValue = function
     | Value v -> v
+    | _ -> failwith "won't happen"
 
+let rec flatten listExp =
+    match listExp with
+        | List[Value x; tail] ->
+            Value x :: flatten tail
+        | _ -> []
 // ---------------------------------------------
 // Interpreter
 //
@@ -76,16 +85,20 @@ let rec eval exps env =
           .Add("-", Function minus)
           .Add("quote", Function quote)
           .Add("lambda", Function lambda)
+          .Add("cons", Function cons)
 
     match exps with
-        | Value (K k) -> Value (K k)
+        | Value x -> Value x
         | Var x -> Value (find x env) // TODO try find
+        | Nil -> Nil
         | Symbol s -> match Map.tryFind s symbols with
                           | Some (Function f) -> Function f
                           | _ -> err "Symbol is not implemented\n symbol: %A\n env: %A\n" s env
         | List (exp::exps) ->
             match eval exp env with
                 | Function funx -> funx (List exps) env
+                | _ -> None
+        | _ -> None
 and intOp exp env funct expFun =
     match exp with
         | List [] -> None
@@ -93,15 +106,28 @@ and intOp exp env funct expFun =
         | Var x -> Value (find x env)
         | List (head::tail) ->
             mapInt funct (eval head env) (expFun (List tail) env)
+        | _ -> None
 and plus exp env =
     intOp exp env (+) plus
 and mul exp env =
     intOp exp env (*) mul
 and minus exp env =
     intOp exp env (-) minus
-and quote exp env =
+and quote exp _ =
     match exp with
         | List [lst] -> lst
+        | _ -> None
+//TODO: What happens here? Is a refactor possible?
+and cons exp env =
+    match exp with
+        | List [head; List tail] ->
+            let fst = eval head env
+            let (List rest) = eval (List tail) env
+            let result = List (fst :: rest)
+            result
+        | List [head; tail] ->
+            List [eval head env; eval tail env]
+        | _ -> None
 and lambda args env =
     match args with
         | List ((List parms) :: body) ->
@@ -112,5 +138,8 @@ and lambda args env =
                               let params' = List.map extractVar parms
                               let innerEnv = E (List.zip params' values' |> Map.ofList)
                               let newEnv = intersect (intersect env funEnv) innerEnv
-                              eval (List.head body) newEnv)
+                              //TODO: List.head body ??
+                              eval (List.head body) newEnv
+                            | _ -> None)
+        | _ -> None
 
