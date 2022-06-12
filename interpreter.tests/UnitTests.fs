@@ -125,3 +125,61 @@ let TestQuote () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
+let TestConsSimple () =
+    // (cons 1 '(2 3)) 
+    let lambda = Lambda (["x"], Var "x", [Atom (K 1)]) 
+    let cons = Function [Symb "cons"; lambda; Quote (List [Atom (K 2); Atom (K 3)])]
+    let env = E Map.empty
+    match (eval cons env) with
+        | List lst -> Assert.AreEqual (areEquals lst ([Atom (K 1); Atom (K 2); Atom (K 3)]), true)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestConsChain () =
+    // (cons 1 '(2 3)) 
+    let cons = Function [Symb "cons"; Atom (K 1); Function [Symb "cons"; Atom (K 4); Function [Symb "cons"; Atom (K 3); Atom Nil]]]
+    let env = E Map.empty
+    match (eval cons env) with
+        | List lst -> Assert.AreEqual (areEquals lst ([Atom (K 1); Atom (K 4); Atom (K 3)]), true)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestCar () =
+    // (car '(1 2 3)) 
+    let car = Function [Symb "car"; Quote (List [Atom (K 3); Atom (K 6)])]
+    let env = E Map.empty
+    match (eval car env) with
+        | Atom (K k) -> Assert.AreEqual (3, k)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+//TODO: reflect upon evaluation of th head
+[<Test>]
+let TestCarComplex () =
+    // (car (cons (lambda (cons 4 (cons 3 nil)))) 
+    let lambda = Lambda (["x"], Var "x", [Atom (K 1)])
+    let cons = Function [Symb "cons"; lambda; Function [Symb "cons"; Atom (K 4); Function [Symb "cons"; Atom (K 3); Atom Nil]]]
+    let car = Function [Symb "car"; cons]
+    let env = E Map.empty
+    match (eval car env) with
+        | Atom (K k) -> Assert.AreEqual (1, k) //it should be ((lambda (x) x) 1)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestCdrComplex () =
+    // (cdr (cons (lambda (cons 4 (cons 3 nil)))) 
+    let lambda = Lambda (["x"], Var "x", [Atom (K 1)])
+    let cons = Function [Symb "cons"; lambda; Function [Symb "cons"; Atom (K 4); Function [Symb "cons"; Atom (K 3); Atom Nil]]]
+    let cdr = Function [Symb "cdr"; cons]
+    let env = E Map.empty
+    match (eval cdr env) with
+        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 4); Atom (K 3)]), true) //it should be ((lambda (x) x) 1)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+
+
