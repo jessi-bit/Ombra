@@ -10,6 +10,7 @@ type atom =
     | K of int
     | B of bool
     | S of string
+    | Nil
 
 type env = E of Map<var, atom>
 
@@ -20,8 +21,8 @@ type exp =
     | Atom of atom
     | Var of var
     | Symb of symbol
-    | Function of exp list
     | Call of exp list
+    | Function of (exp list -> exp)
 
 // ---------------------------------------------
 // Environment
@@ -69,9 +70,10 @@ let rec eval exp env =
     let symbols =
         Map.empty
           .Add("+", Function plus)
-        //   .Add("*", Function mul)
-        //   .Add("-", Function minus)
-        //   .Add("quote", Function quote)
+          .Add("*", Function mul)
+          .Add("-", Function minus)
+          .Add("quote", Function quote)
+          .Add("cons", Function cons)
         //   .Add("lambda", Function lambda)
     match exp with
         | Atom x -> Atom x
@@ -80,56 +82,34 @@ let rec eval exp env =
                           | Some (Function f) -> Function f
                           | _ -> failwith "symbol is not implemented" //Call [Syombol "+"; Value K 1; Value K2]
         | Call (symb :: args) ->
-            let funx = eval symb env
-            let evaluated = evalExps args 
-            funx evaluated
-                 
-
-        // | List (exp::exps) ->
-        //     match eval exp env with
-        //         | Function funx -> funx (List exps) env
-        //         | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
-        // | _ -> failwith "wat"
+            let (Function funx) = eval symb env
+            let evaluated = evalExps args env
+            funx evaluated 
+        | _ -> None
 and evalExps exps env = 
     match exps with
         | [] -> []
         | head :: tail -> eval head env :: evalExps tail env
+and intOp atoms funx expFun = 
+    match atoms with
+        | [] -> None
+        | [Atom (K _) as atom] -> atom
+        | head :: tail ->
+            mapInt funx head (expFun tail)
 and plus atoms =
+    intOp atoms (+) plus
+and mul atoms =
+    intOp atoms (*) mul
+and minus atoms =
+    intOp atoms (-) minus
+and quote atoms =
+    match atoms with
+        | [] -> Nil
+        | head :: tail ->
 
+and cons atoms =
+    
 
-
-
-
-
-and intOp exp env funct expFun =
-    match exp with
-        | List [] -> None
-        | Atom (K _) -> exp
-        | Var x -> Atom (find x env)
-        | List (head::tail) ->
-            mapInt funct (eval head env) (expFun (List tail) env)
-
-
-
-
-
-
-
-
-
-
-
-
-
-and plus exp env =
-    intOp exp env (+) plus
-and mul exp env =
-    intOp exp env (*) mul
-and minus exp env =
-    intOp exp env (-) minus
-and quote exp env =
-    match exp with
-        | List [lst] -> printf "%A" lst; lst
 and lambda args env =
     match args with
         | List (head :: body) ->
