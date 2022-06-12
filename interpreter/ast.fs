@@ -86,6 +86,8 @@ let rec eval exps env =
           .Add("quote", Function quote)
           .Add("lambda", Function lambda)
           .Add("cons", Function cons)
+          .Add("car", Function car)
+          .Add("cdr", Function cdr)
 
     match exps with
         | Value x -> Value x
@@ -128,9 +130,15 @@ and cons exp env =
         | List [head; tail] ->
             List [eval head env; eval tail env]
         | _ -> None
+and car exp env =
+    match exp with
+        |  List [List [Symbol "cons"; head; _]] -> eval head env
+        | _ -> None       
+and cdr exp env =
+    let (List [_; tail]) = eval exp env in tail
 and lambda args env =
     match args with
-        | List ((List parms) :: body) ->
+        | List (List parms :: body) ->
             Function (fun values funEnv ->
                       match values with
                             | List values ->
@@ -143,3 +151,7 @@ and lambda args env =
                             | _ -> None)
         | _ -> None
 
+// (car (cons 1 (cons 2 nil)))
+let lst = List [Symbol "cons"; Value (B true); Nil]
+let carJ = List[Symbol "car"; lst]
+let a = eval carJ (E Map.empty)

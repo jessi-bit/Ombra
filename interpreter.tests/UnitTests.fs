@@ -14,7 +14,7 @@ let TestConfig () =
 
 [<Test>]
 let TestSum () =
-    // (+ 1 41)
+    // (+ 1 41) 
     let exp = List [Symbol "+"; Value (K 1); Value (K 41)]
     let env = (E Map.empty)
     match (eval exp env) with
@@ -140,6 +140,18 @@ let TestConsComplex () =
     // (cons 1 (cons 2 (cons 3 nil)))
     let sublst1 = List[Symbol "cons"; Value (B true); List[Symbol "cons"; Value (B false); Nil]]
     let lst = List[Symbol "cons"; Value (B true); sublst1]
+    let env = E Map.empty
+    let listResult = eval lst env; 
+    Assert.AreEqual (areEqual listResult (List [Value (B true); Value (B true); Value (B false); Nil]), true)
+    Assert.Pass()
+
+[<Test>]
+let TestCar () =
+    // (car '(1 2 3))
+    // (car (cons 1 (cons 2 nil)))
+    let sublst1 = List[Symbol "cons"; Value (B false); Nil]
+    let lst = List[Symbol "cons"; Value (B true); sublst1]
+    let car = List [Symbol "car"; lst]
     let env = E Map.empty
     let listResult = eval lst env; 
     Assert.AreEqual (areEqual listResult (List [Value (B true); Value (B true); Value (B false); Nil]), true)
