@@ -77,7 +77,7 @@ let rec eval exp env =
         | Atom x -> Atom x
         | Var x -> Atom (find x env) 
         | Symb s -> match Map.tryFind s symbols with
-                          | Some funx -> funx f
+                          | Some (Function f) -> Function f
                           | _ -> failwith "symbol is not implemented" //Call [Syombol "+"; Value K 1; Value K2]
         | Call (symb :: args) ->
             let funx = eval symb env
