@@ -3,35 +3,39 @@
 
 module Ombra.Interpreter
 
-type var = V of string
+type var = string
+type symbol = string
 
-type value =
+type atom =
     | K of int
     | B of bool
     | S of string
 
-type env = E of Map<var, value>
+type env = E of Map<var, atom>
 
 // JessiBit's idea: in Lisp everything is a list, so code it accordingly
 // TODO refactor exp in exps
-type exp =
+type exp = 
     | None
-    | Value of value
+    | Atom of atom
     | Var of var
-    | Symbol of string
-    | Function of (exp -> env -> exp)
-    | List of exp list
-
-type maybe<'a> = Just of 'a | Nothing
+    | Symb of symbol
+    | Function of exp list
+    | Call of exp list
 
 // ---------------------------------------------
 // Environment
 
 let print (E env) =
-    Map.iter (fun k v -> printf "key: %A - value: %A\n" k v) env
+    Map.iter (fun k v -> printf "key: %A - Atom: %A\n" k v) env
+
+let err msg exp env =
+    failwith (sprintf msg exp env)
 
 let find var (E env) =
-    Map.find var env
+    match Map.tryFind var env with
+        | Some atom -> atom
+        | _ -> err "Var %A Not found in env %A:" var env
 
 let intersect (E outer) (E inner) =
     let res = Map.fold (fun acc k v -> Map.add k v acc) outer inner
@@ -43,19 +47,14 @@ let intersect (E outer) (E inner) =
 // TODO write fail with sprintf
 // and use it everywhere
 
-let err msg exp env =
-    failwith (sprintf msg exp env)
-
 // -----------------------------------
-// lifting Monad
+// lifting mapF
 // 
 let mapInt funct exp1 exp2 =
     match exp1, exp2 with
-        | Value (K k), Value (K k2) -> Value (K (funct k k2))
-        | Value (K k), None -> Value (K k)
-
-let unwrapInt = function
-    | Value (K k) -> k
+        | Atom (K k), Atom (K k2) -> Atom (K (funct k k2))
+        | Atom (K k), None -> Atom (K k)
+        | _-> None
 
 // ---------------------------------------------
 // Interpreter
@@ -65,36 +64,63 @@ let unwrapInt = function
 // If we get to this stage it means we already type checked
 // the expression so it's safe to make assumptions
 
-let rec eval exps env =
-    // TODO for some reason symbols should stay here, we can't put it in
-    // mutual recursion below or the tests will fail
+let rec eval exp env =
     // TODO: Add Equality for the whole language (and think cases)
     let symbols =
         Map.empty
           .Add("+", Function plus)
-          .Add("*", Function mul)
-          .Add("-", Function minus)
-          .Add("quote", Function quote)
-          .Add("lambda", Function lambda)
+        //   .Add("*", Function mul)
+        //   .Add("-", Function minus)
+        //   .Add("quote", Function quote)
+        //   .Add("lambda", Function lambda)
+    match exp with
+        | Atom x -> Atom x
+        | Var x -> Atom (find x env) 
+        | Symb s -> match Map.tryFind s symbols with
+                          | Some funx -> funx f
+                          | _ -> failwith "symbol is not implemented" //Call [Syombol "+"; Value K 1; Value K2]
+        | Call (symb :: args) ->
+            let funx = eval symb env
+            let evaluated = evalExps args 
+            funx evaluated
+                 
 
+        // | List (exp::exps) ->
+        //     match eval exp env with
+        //         | Function funx -> funx (List exps) env
+        //         | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
+        // | _ -> failwith "wat"
+and evalExps exps env = 
     match exps with
-        | Value (K k) -> Value (K k)
-        | Var x -> Value (find x env) // TODO try find
-        | Symbol s -> match Map.tryFind s symbols with
-                          | Some (Function f) -> Function f
-                          | _ -> failwith "symbol is not implemented"
-        | List (exp::exps) ->
-            match eval exp env with
-                | Function funx -> funx (List exps) env
-                | _ -> err "exp is not a function\n exp: %A\n env: %A\n" exps env
-        | _ -> failwith "wat"
+        | [] -> []
+        | head :: tail -> eval head env :: evalExps tail env
+and plus atoms =
+
+
+
+
+
+
 and intOp exp env funct expFun =
     match exp with
         | List [] -> None
-        | Value (K _) -> exp
-        | Var x -> Value (find x env)
+        | Atom (K _) -> exp
+        | Var x -> Atom (find x env)
         | List (head::tail) ->
             mapInt funct (eval head env) (expFun (List tail) env)
+
+
+
+
+
+
+
+
+
+
+
+
+
 and plus exp env =
     intOp exp env (+) plus
 and mul exp env =
@@ -109,15 +135,15 @@ and lambda args env =
         | List (head :: body) ->
             match head with
                 | List parms ->
-                    Function (fun values innerEnv ->
-                              match values with
-                                    | List values ->
-                                      let values' = List.map (fun x -> extractValue (eval x env)) values
+                    Function (fun Atoms innerEnv ->
+                              match Atoms with
+                                    | List Atoms ->
+                                      let Atoms' = List.map (fun x -> extractAtom (eval x env)) Atoms
                                       let params' = List.map extractVar parms
-                                      let innerEnv = E (List.zip params' values' |> Map.ofList)
+                                      let innerEnv = E (List.zip params' Atoms' |> Map.ofList)
                                       let newEnv' = intersect env innerEnv
                                       eval (List.head body) newEnv')
 and extractVar = function
     | Var x -> x
-and extractValue = function
-    | Value v -> v
+and extractAtom = function
+    | Atom v -> v
