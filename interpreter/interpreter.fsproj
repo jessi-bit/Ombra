@@ -6,7 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="*.fs" />
+    <!-- never use *.fs -->
+    <Compile Include="types.fs" /> 
+    <Compile Include="ops.fs" /> 
+    <Compile Include="ast.fs" /> 
   </ItemGroup>
 
 </Project>
