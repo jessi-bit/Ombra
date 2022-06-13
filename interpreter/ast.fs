@@ -3,7 +3,7 @@
 
 module Ombra.Interpreter
 
-type var = string
+type vname = string
 type symbol = string
 
 type atom =
@@ -11,18 +11,18 @@ type atom =
     | B of bool
     | S of string
     | Nil
-
-type env = E of Map<var, atom>
-
-// JessiBit's idea: in Lisp everything is a list, so code it accordingly
-// TODO refactor exp in exps
 type exp = 
     | None
     | Atom of atom
-    | Var of var
+    | Var of vname
     | Symb of symbol
-    | Call of exp list
-    | Function of (exp list -> exp)
+    | Function of exp list
+    | Call of (exp list -> exp)
+    | Quote of exp 
+    | List of exp list
+    | Lambda of vname list * exp * exp list
+    
+type env = E of Map<vname, exp>
 
 // ---------------------------------------------
 // Environment
@@ -35,7 +35,7 @@ let err msg exp env =
 
 let find var (E env) =
     match Map.tryFind var env with
-        | Some atom -> atom
+        | Some exp -> exp
         | _ -> err "Var %A Not found in env %A:" var env
 
 let intersect (E outer) (E inner) =
@@ -44,9 +44,6 @@ let intersect (E outer) (E inner) =
 
 // ---------------------------------------------
 // Utility
-
-// TODO write fail with sprintf
-// and use it everywhere
 
 // -----------------------------------
 // lifting mapF
@@ -69,22 +66,26 @@ let rec eval exp env =
     // TODO: Add Equality for the whole language (and think cases)
     let symbols =
         Map.empty
-          .Add("+", Function plus)
-          .Add("*", Function mul)
-          .Add("-", Function minus)
-          .Add("quote", Function quote)
-          .Add("cons", Function cons)
-        //   .Add("lambda", Function lambda)
+          .Add("+", Call plus)
+          .Add("*", Call mul)
+          .Add("-", Call minus)
+          .Add("cons", Call cons)
+          .Add("car", Call car)
+          .Add("cdr", Call cdr)
     match exp with
         | Atom x -> Atom x
-        | Var x -> Atom (find x env) 
-        | Symb s -> match Map.tryFind s symbols with
-                          | Some (Function f) -> Function f
-                          | _ -> failwith "symbol is not implemented" //Call [Syombol "+"; Value K 1; Value K2]
-        | Call (symb :: args) ->
-            let (Function funx) = eval symb env
+        | List _ -> exp
+        | Var x -> find x env 
+        | Symb s -> Map.find s symbols  
+        | Function (symb :: args) ->   
+            let (Call funx) = eval symb env
             let evaluated = evalExps args env
             funx evaluated 
+        | Lambda (args, body, parms) ->
+            let innerEnv = E (List.zip args (evalExps parms env) |> Map.ofList)
+            let newEnv = intersect env innerEnv 
+            eval body newEnv    
+        | Quote exp -> exp
         | _ -> None
 and evalExps exps env = 
     match exps with
@@ -102,28 +103,20 @@ and mul atoms =
     intOp atoms (*) mul
 and minus atoms =
     intOp atoms (-) minus
-and quote atoms =
-    match atoms with
-        | [] -> Nil
-        | head :: tail ->
-
 and cons atoms =
-    
+    match atoms with
+        | head :: tail ->
+            match tail with
+                | [Atom Nil] -> List [head]
+                | [List lst] -> List (head :: lst)
+                | _ -> None
+        | _ -> None
+and car atoms =
+    match atoms with
+        | [List (head :: _)] -> head
+        | _ -> None
+and cdr atoms =
+    match atoms with
+        | [List (_ :: tail)] -> List tail
+        | _ -> None
 
-and lambda args env =
-    match args with
-        | List (head :: body) ->
-            match head with
-                | List parms ->
-                    Function (fun Atoms innerEnv ->
-                              match Atoms with
-                                    | List Atoms ->
-                                      let Atoms' = List.map (fun x -> extractAtom (eval x env)) Atoms
-                                      let params' = List.map extractVar parms
-                                      let innerEnv = E (List.zip params' Atoms' |> Map.ofList)
-                                      let newEnv' = intersect env innerEnv
-                                      eval (List.head body) newEnv')
-and extractVar = function
-    | Var x -> x
-and extractAtom = function
-    | Atom v -> v

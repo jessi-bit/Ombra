@@ -181,5 +181,3 @@ let TestCdrComplex () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
-
-
