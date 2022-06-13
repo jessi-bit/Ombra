@@ -303,6 +303,7 @@ let TestLen2 () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
 let TestNot () =
     // (not t) 
     let a = [Op "not"; Atom (B true)]
@@ -312,6 +313,7 @@ let TestNot () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
 let TestGreater () =
     // (> 1 (length "")) 
     let a = [Op ">"; Atom (K 1); SubExp [Op "length"; Atom (S "")]]
@@ -321,6 +323,7 @@ let TestGreater () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
 let TestLesser () =
     // (< 1 (+ 1 2)) 
     let a = [Op "<"; Atom (K 1); SubExp [Op "+"; Atom (K 1); Atom (K 2)]]
@@ -330,6 +333,7 @@ let TestLesser () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
 let TestEq () =
     // (= 1 (- 2 1)) 
     let a = [Op "="; Atom (K 1); SubExp [Op "-"; Atom (K 2); Atom (K 1)]]
@@ -339,6 +343,7 @@ let TestEq () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
+[<Test>]
 let TestCaar () =
     // (caar '(3 6)) 
     let a = [Op "caar"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
