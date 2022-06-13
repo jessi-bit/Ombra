@@ -15,7 +15,7 @@ let TestConfig () =
 [<Test>]
 let TestSum () =
     // (+ 1 41)
-    let exp = [Symb "+"; K 1; K 2]
+    let exp = [Op "+"; Atom (K 1); Atom (K 2)]
     let env = (E Map.empty)
     // printfn "EVAL : %A" (evalList exp env)
     match (evalList exp env) with
