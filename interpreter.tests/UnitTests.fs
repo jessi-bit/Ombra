@@ -3,29 +3,12 @@ module Ombra.InterpreterTest
 open NUnit.Framework
 open Ombra.Types
 open Ombra.Interpreter
+open Ombra.Ops
 //open FsCheck
 
 [<SetUp>]
 let Setup () =
     ()
-
-let rec isEqual exp1 exp2 =
-    match (exp1, exp2) with
-        | Atom (K k), Atom (K k1) -> k = k1
-        | Atom (S s), Atom (S s1) -> s = s1
-        | Atom (B b), Atom (B b1) -> b = b1
-        | Atom (Var v), Atom (Var v1) -> v = v1
-        | Op s, Op s1 -> s = s1
-        | Atom Nil, Atom Nil -> true
-        | List l1, List l2 -> areEquals l1 l2
-        | _-> false
-
-and areEquals xs ys =
-    match (xs, ys) with
-        | [], [] -> true
-        | head1 :: tail1, head2 :: tail2 -> 
-            isEqual head1 head2 && (areEquals tail1 tail2)
-        | _ -> false
 
 [<Test>]
 let TestConfig () =
@@ -350,6 +333,17 @@ let TestCaar () =
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (K k) -> Assert.AreEqual (k, 6) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+
+[<Test>]
+let TestEqList () =
+    // (caar '(3 6)) 
+    let a = [Op "="; List[Atom (K 3); Atom(K 6); Atom Nil]; List [Atom (K 3); Atom (K 6); Atom Nil]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, true) 
         | _ -> Assert.Fail()
     Assert.Pass()
 

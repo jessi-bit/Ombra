@@ -109,8 +109,26 @@ let greater elements =
 let lesser elements =
     cmp elements (<)
 
+let rec isEqual exp1 exp2 =
+    match (exp1, exp2) with
+        | Atom (K k), Atom (K k1) -> k = k1
+        | Atom (S s), Atom (S s1) -> s = s1
+        | Atom (B b), Atom (B b1) -> b = b1
+        | Atom (Var v), Atom (Var v1) -> v = v1
+        | Op s, Op s1 -> s = s1
+        | Atom Nil, Atom Nil -> true
+        | List l1, List l2 -> areEquals l1 l2
+        | _-> false
+
+and areEquals xs ys =
+    match (xs, ys) with
+        | [], [] -> true
+        | head1 :: tail1, head2 :: tail2 -> 
+            isEqual head1 head2 && (areEquals tail1 tail2)
+        | _ -> false
+
 let eq elements =
-    cmp elements (=)
-
-
+    match elements with
+        | [fst; snd] -> Atom (B (isEqual fst snd))
+        | _ -> Atom None
 
