@@ -33,8 +33,18 @@ let rec evalExp e env =
             .Add("-", minus)
             .Add("'", quote)
             .Add("cons", cons)
-        //   .Add("car", car)
-        //   .Add("cdr", cdr)
+            .Add("car", car)
+            .Add("cdr", cdr)
+            .Add("caar", caar)
+            .Add("and", andB)
+            .Add("or", orB)
+            .Add("append", cat)
+            .Add("length", len)
+            .Add("not", notB)
+            .Add(">", greater)
+            .Add("<", lesser)
+            .Add("=", eq)
+
     match e with
         | [] -> Atom None
         | head :: tail -> 

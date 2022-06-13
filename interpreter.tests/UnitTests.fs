@@ -208,40 +208,145 @@ let TestConsChain () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
-// [<Test>]
-// let TestCar () =
-//     // (car '(1 2 3)) 
-//     let car = Function [Symb "car"; Quote (List [Atom (K 3); Atom (K 6)])]
-//     let env = E Map.empty
-//     match (eval car env) with
-//         | Atom (K k) -> Assert.AreEqual (3, k)
-//         | _ -> Assert.Fail()
-//     Assert.Pass()
+[<Test>]
+let TestCar () =
+    // (car '(1 2 3)) 
+    let car = [Op "car"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let env = E Map.empty
+    match (evalExp car env) with
+        | Atom (K k) -> Assert.AreEqual (3, k)
+        | _ -> Assert.Fail()
+    Assert.Pass()
 
-// //TODO: reflect upon evaluation of th head
-// [<Test>]
-// let TestCarComplex () =
-//     // (car (cons (lambda (cons 4 (cons 3 nil)))) 
-//     let lambda = Lambda (["x"], Var "x", [Atom (K 1)])
-//     let cons = Function [Symb "cons"; lambda; Function [Symb "cons"; Atom (K 4); Function [Symb "cons"; Atom (K 3); Atom Nil]]]
-//     let car = Function [Symb "car"; cons]
-//     let env = E Map.empty
-//     match (eval car env) with
-//         | Atom (K k) -> Assert.AreEqual (1, k) //it should be ((lambda (x) x) 1)
-//         | _ -> Assert.Fail()
-//     Assert.Pass()
+//TODO: reflect upon evaluation of th head
+[<Test>]
+let TestCarComplex () =
+    // (car (cons (lambda (cons 4 (cons 3 nil)))) 
+    let op = [Op "+"; Atom (K 1); Atom (K 2)]
+    let cons = [Op "cons"; SubExp op; SubExp [Op "cons"; Atom (K 4); SubExp [Op "cons"; Atom (K 3); Atom Nil]]]
+    let car = [Op "car"; SubExp cons]
+    let env = E Map.empty
+    match (evalExp car env) with
+        | Atom (K k) -> Assert.AreEqual(k, 3) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
 
-// [<Test>]
-// let TestCdrComplex () =
-//     // (cdr (cons (lambda (cons 4 (cons 3 nil)))) 
-//     let lambda = Lambda (["x"], Var "x", [Atom (K 1)])
-//     let cons = Function [Symb "cons"; lambda; Function [Symb "cons"; Atom (K 4); Function [Symb "cons"; Atom (K 3); Atom Nil]]]
-//     let cdr = Function [Symb "cdr"; cons]
-//     let env = E Map.empty
-//     match (eval cdr env) with
-//         | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 4); Atom (K 3)]), true) //it should be ((lambda (x) x) 1)
-//         | _ -> Assert.Fail()
-//     Assert.Pass()
+[<Test>]
+let TestCdrCons () =
+    // (cdr (cons (2 (cons 3 nil)))) 
+    let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); Atom Nil]]
+    let cdr = [Op "cdr"; SubExp cons]
+    let env = E Map.empty
+    match (evalExp cdr env) with
+        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3); Atom Nil]), true) //it should be ((lambda (x) x) 1)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestCdrQuote () =
+    // (cdr (cons (2 (cons 3 nil)))) 
+    let quote = [Op "'"; List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]]
+    let cdr = [Op "cdr"; SubExp quote]
+    let env = E Map.empty
+    match (evalExp cdr env) with
+        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3); Atom (K 4); Atom Nil]), true) //it should be ((lambda (x) x) 1)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestAnd () =
+    // (and t nil nil) 
+    let a = [Op "and"; Atom (B true); Atom (B false);  Atom (B false)]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, false) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestOr () =
+    // (or b nil nil) 
+    let a = [Op "or"; Atom (B true); Atom (B false);  Atom (B false)]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, true) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestCat () =
+    // (append "il_" "Jessica_" "èFigo") 
+    let a = [Op "append"; Atom (S "il_"); Atom (S "Jessica_");  Atom (S "e'Figo")]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (S s) -> Assert.AreEqual (s, "il_Jessica_e'Figo") 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestLen () =
+    // (length "il_") 
+    let a = [Op "length"; Atom (S "il_")]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (K k) -> Assert.AreEqual (k, 3) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestLen2 () =
+    // (length '(1 2 3)) 
+    let a = [Op "length"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (K k) -> Assert.AreEqual (k, 2) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let TestNot () =
+    // (not t) 
+    let a = [Op "not"; Atom (B true)]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, false) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let TestGreater () =
+    // (> 1 (length "")) 
+    let a = [Op ">"; Atom (K 1); SubExp [Op "length"; Atom (S "")]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, true) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let TestLesser () =
+    // (< 1 (+ 1 2)) 
+    let a = [Op "<"; Atom (K 1); SubExp [Op "+"; Atom (K 1); Atom (K 2)]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, true) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let TestEq () =
+    // (= 1 (- 2 1)) 
+    let a = [Op "="; Atom (K 1); SubExp [Op "-"; Atom (K 2); Atom (K 1)]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (B b) -> Assert.AreEqual (b, true) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+let TestCaar () =
+    // (caar '(3 6)) 
+    let a = [Op "caar"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let env = E Map.empty
+    match (evalExp a env) with
+        | Atom (K k) -> Assert.AreEqual (k, 6) 
+        | _ -> Assert.Fail()
+    Assert.Pass()
 
 // (if (= 1 2)
 //     (print "then")
