@@ -62,14 +62,15 @@ and evalEl el env =
         | Atom (Var x) -> find x env
         | Atom (_) | Op (_) | List(_) | L (LambdaDef _)  -> el
         | SubExp s  -> evalExp s env
-        | L (LambdaApp (lambdaDef, parms)) -> 
+        | L (LambdaApp (lambdaDef, parms)) ->
             let (L (LambdaDef (args, body))) = evalEl (L lambdaDef) env  
             let parms' = match parms with
                             | List lst -> List.map (fun x -> evalEl x env) lst
                             | _ -> [evalEl parms env]
             let innerEnv = E (List.zip args parms' |> Map.ofList)
             let newEnv = intersect env innerEnv 
-            evalEl body newEnv    
-
-
-
+            evalEl body newEnv
+        | ITE (cnd, thn, ls) -> let (Atom (B condition)) = evalEl cnd env
+                                if condition
+                                    then evalEl thn env
+                                    else evalEl ls env

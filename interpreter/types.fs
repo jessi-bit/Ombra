@@ -19,13 +19,16 @@ and element =
     | Op of string
     | SubExp of exp
     | L of lambda
+    | ITE of element * element * element
 and lambda =
     | LambdaDef of vname list * element
     | LambdaApp of lambda * element
-    
+
 type env = E of Map<vname, element>
 
-// ------------------- AST STRINGIFYNG --------------------------------------------------------------
+// ---------------------------------------------
+// AST stringifying
+//
 
 let rec lispyList xs =
     match xs with

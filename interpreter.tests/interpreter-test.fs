@@ -2,8 +2,8 @@ module Ombra.InterpreterTest
 
 open NUnit.Framework
 open Ombra.Types
-open Ombra.Interpreter
 open Ombra.Ops
+open Ombra.Interpreter
 //open FsCheck
 
 [<SetUp>]
@@ -335,7 +335,6 @@ let TestCaar () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
-
 [<Test>]
 let TestEqList () =
     // (caar '(3 6)) 
@@ -346,6 +345,26 @@ let TestEqList () =
         | _ -> Assert.Fail()
     Assert.Pass()
 
-// (if (= 1 2)
-//     (print "then")
-//     (print "else"))
+[<Test>]
+let TestIfThen() =
+    // (if (= 42 42) (+ 1 41))
+    let ite = [ITE (SubExp [Op "="; Atom (K 42); Atom (K 42)],
+               SubExp [Op "+"; Atom (K 1); Atom (K 41)],
+               Atom None)]
+    let env = E Map.empty
+    match (evalExp ite env) with
+        | Atom (K k) -> Assert.AreEqual (k, 42)
+        | _ -> Assert.Fail()
+    Assert.Pass()
+
+[<Test>]
+let TestIfElse() =
+    // (if (= 42 42) (+ 1 41))
+    let ite = [ITE (SubExp [Op "="; Atom (K 1); Atom (K 42)],
+               Atom None,
+               SubExp [Op "+"; Atom (K 1); Atom (K 41)])]
+    let env = E Map.empty
+    match (evalExp ite env) with
+        | Atom (K k) -> Assert.AreEqual (k, 42)
+        | _ -> Assert.Fail()
+    Assert.Pass()
