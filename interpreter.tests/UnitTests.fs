@@ -101,7 +101,6 @@ let TestLambdaPlus () =
 [<Test>]
 let TestLambdaComplex () =
     // ((lambda (x y) (+ x y)) 1 2)
-    
     let args = ["x"; "y"]
     let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
     let parms = List[Atom (K 1); Atom (K 2)]
@@ -116,7 +115,7 @@ let TestLambdaComplex () =
 
 [<Test>]
 let TestLambdaDef () =
-    // ((lambda (x y) (+ x y)) 1 2)
+    // ((lambda (x y) (+ x y)))
     
     let args = ["x"; "y"]
     let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
@@ -204,7 +203,7 @@ let TestCar () =
 //TODO: reflect upon evaluation of th head
 [<Test>]
 let TestCarComplex () =
-    // (car (cons (lambda (cons 4 (cons 3 nil)))) 
+    // (car (cons ((+ 1 2) (cons 4 (cons 3 nil)))) 
     let op = [Op "+"; Atom (K 1); Atom (K 2)]
     let cons = [Op "cons"; SubExp op; SubExp [Op "cons"; Atom (K 4); SubExp [Op "cons"; Atom (K 3); Atom Nil]]]
     let car = [Op "car"; SubExp cons]
