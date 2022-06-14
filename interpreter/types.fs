@@ -30,9 +30,10 @@ type env = E of Map<vname, element>
 let rec lispyList xs =
     match xs with
         | [] -> ""
+        | [el] -> string el 
         | head :: tail ->
             string head + " " + lispyList tail
-            
+
 let rec toStringEl element =
         match element with 
             | Atom a -> match a with
@@ -51,14 +52,20 @@ let rec toStringEl element =
                 let res =  "(" + (toStringEl head) + (toStringExp tail)
                 let res' = res.Replace(" )", "")
                 sprintf "%s" (res'.TrimEnd() + ")")
-            | Op o -> o + " "
+            | Op o -> 
+                match o with
+                    | "'" -> o
+                    | _ -> o + " "
             | SubExp e -> sprintf "%s " (toStringExp e)
             | L lambda -> 
                 match lambda with
                     | LambdaDef (args, body) -> 
-                        sprintf "( %s (%s) (%s))" "lambda" (lispyList args) (toStringEl body)
+                        sprintf "((%s (%s) %s)" "lambda" (lispyList args) ((toStringEl body).TrimEnd())
                     | LambdaApp (LambdaDef (_,_) as def, parms) ->
-                        sprintf "(%s %s)" (toStringEl (L def)) (toStringEl parms)
+                        let stringyParms = match parms with
+                                            | List _ -> (toStringEl parms).Replace(")", "").Replace("(","")
+                                            | _ -> toStringEl parms
+                        sprintf "%s %s" (toStringEl (L def)) stringyParms    
                     | _ -> ""
 and toStringExp exp =
     match exp with

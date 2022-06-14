@@ -9,7 +9,7 @@
     <!-- never use *.fs -->
     <Compile Include="types.fs" /> 
     <Compile Include="ops.fs" /> 
-    <Compile Include="ast.fs" /> 
+    <Compile Include="interpreter.fs" /> 
   </ItemGroup>
 
 </Project>
