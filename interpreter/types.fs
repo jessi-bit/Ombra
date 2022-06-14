@@ -37,7 +37,11 @@ let rec toStringEl element =
         match element with 
             | Atom a -> match a with
                             | K i -> sprintf "%i " i
-                            | B(b) -> sprintf "%b " b
+                            | B(b) -> 
+                                match b with
+                                    | true -> sprintf "%s" "#t "
+                                    | _ -> sprintf "%s" "#f "
+
                             | S(s) -> s + " "
                             | Var(v) -> v + " "
                             | None -> sprintf "%s" "none"

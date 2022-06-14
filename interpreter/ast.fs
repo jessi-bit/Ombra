@@ -72,7 +72,9 @@ and evalEl el env =
             evalEl body newEnv    
 
 let exp = [Op "+"; Atom (K 1); Atom (K 2)]
-let env = (E Map.empty)         
+let env = (E Map.empty)   
+let res = evalExp exp env 
+     
 let e = toStringExp exp
 let sum2 = [Op "+"; SubExp[Op "+"; Atom (K 2); Atom (K 3)]; Atom (K 5)]
 let sum3 = SubExp[Op "+"; Atom (K 2); Atom (K 3)]
@@ -81,5 +83,9 @@ let e3 = toStringEl sum3
 
 let lst = List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]
 let s = toStringEl lst
-let lambda = 
+let args = ["x"; "y"]
+let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
+let lambdadef = [L (LambdaDef (args, body))]
+let s1 = toStringExp lambdadef
+
 
