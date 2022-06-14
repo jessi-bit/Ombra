@@ -9,7 +9,8 @@
 
   <ItemGroup>
     <!-- never use *.fs -->
-    <Compile Include="UnitTests.fs" />
+    <Compile Include="interpreter-test.fs" />
+    <Compile Include="stringify-test.fs" />
   </ItemGroup>
 
   <ItemGroup>

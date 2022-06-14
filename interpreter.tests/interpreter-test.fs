@@ -237,7 +237,7 @@ let TestCdrQuote () =
 
 [<Test>]
 let TestAnd () =
-    // (and t nil nil) 
+    // (and #t #f #f) 
     let a = [Op "and"; Atom (B true); Atom (B false);  Atom (B false)]
     let env = E Map.empty
     match (evalExp a env) with
@@ -247,7 +247,7 @@ let TestAnd () =
 
 [<Test>]
 let TestOr () =
-    // (or b nil nil) 
+    // (or #t #f #f) 
     let a = [Op "or"; Atom (B true); Atom (B false);  Atom (B false)]
     let env = E Map.empty
     match (evalExp a env) with
@@ -287,7 +287,7 @@ let TestLen2 () =
 
 [<Test>]
 let TestNot () =
-    // (not t) 
+    // (not #t) 
     let a = [Op "not"; Atom (B true)]
     let env = E Map.empty
     match (evalExp a env) with
