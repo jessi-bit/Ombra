@@ -148,11 +148,11 @@ let TestLambdaComplex2 () =
 [<Test>]
 let TestQuoteList () =
     // ('(1 2 3))  
-    let quote = [Op "'"; List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]]
+    let quote = [Op "'"; SubExp[Atom (K 2); Atom (K 3); Atom (K 4)]]
     let env = E (Map.empty)
     match (evalExp quote env) with
         | List lst -> 
-            Assert.AreEqual (areEquals lst [Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil], true)
+            Assert.AreEqual (areEquals lst [Atom (K 2); Atom (K 3); Atom (K 4)], true)
         | _ -> Assert.Fail()
     Assert.Pass()
 
@@ -160,10 +160,10 @@ let TestQuoteList () =
 let TestQuoteOp () =
     // ('(+ 1 2 3))  
     let sum = [Op "+"; Atom (K 1); Atom (K 2)]
-    let quoteAnExp = [Op "'"; List sum]
+    let quoteAnExp = [Op "'"; SubExp sum]
     let env = E (Map.empty)
     match (evalExp quoteAnExp env) with
-        | SubExp lst -> 
+        | List lst -> 
             Assert.AreEqual (areEquals lst sum, true)
         | _ -> Assert.Fail()
     Assert.Pass()
@@ -171,12 +171,12 @@ let TestQuoteOp () =
 [<Test>]
 let TestConsSimple () =
     // (cons 2 '(3 4))  
-    let cons = [Op "cons"; Atom (K 2); SubExp [Op "'"; List[Atom (K 3); Atom (K 4); Atom Nil]]]
+    let cons = [Op "cons"; Atom (K 2); SubExp [Op "'"; SubExp[Atom (K 3); Atom (K 4)]]]
     let env = E Map.empty
     match (evalExp cons env) with
         | List lst -> 
             printfn "lst %A" lst;
-            Assert.AreEqual (areEquals lst [Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil], true)   
+            Assert.AreEqual (areEquals lst [Atom (K 2); Atom (K 3); Atom (K 4)], true)   
         | _ -> Assert.Fail()
     Assert.Pass()
 
@@ -186,14 +186,14 @@ let TestConsChain () =
     let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); Atom Nil]]
     let env = E Map.empty
     match (evalExp cons env) with
-        | List lst -> Assert.AreEqual (areEquals lst ([Atom (K 2); Atom (K 3); Atom Nil]), true)
+        | List lst -> Assert.AreEqual (areEquals lst ([Atom (K 2); Atom (K 3)]), true)
         | _ -> Assert.Fail()
     Assert.Pass()
 
 [<Test>]
 let TestCar () =
     // (car '(1 2 3)) 
-    let car = [Op "car"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let car = [Op "car"; SubExp[Op "'" ;  SubExp[Atom (K 3); Atom (K 6); Atom Nil]]]
     let env = E Map.empty
     match (evalExp car env) with
         | Atom (K k) -> Assert.AreEqual (3, k)
@@ -220,18 +220,18 @@ let TestCdrCons () =
     let cdr = [Op "cdr"; SubExp cons]
     let env = E Map.empty
     match (evalExp cdr env) with
-        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3); Atom Nil]), true) //it should be ((lambda (x) x) 1)
+        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3)]), true) //it should be ((lambda (x) x) 1)
         | _ -> Assert.Fail()
     Assert.Pass()
 
 [<Test>]
 let TestCdrQuote () =
     // (cdr (cons (2 (cons 3 nil)))) 
-    let quote = [Op "'"; List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]]
+    let quote = [Op "'"; SubExp[Atom (K 2); Atom (K 3); Atom (K 4)]]
     let cdr = [Op "cdr"; SubExp quote]
     let env = E Map.empty
     match (evalExp cdr env) with
-        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3); Atom (K 4); Atom Nil]), true) //it should be ((lambda (x) x) 1)
+        | List tail -> Assert.AreEqual (areEquals tail ([Atom (K 3); Atom (K 4)]), true) //it should be ((lambda (x) x) 1)
         | _ -> Assert.Fail()
     Assert.Pass()
 
@@ -278,7 +278,7 @@ let TestLen () =
 [<Test>]
 let TestLen2 () =
     // (length '(1 2 3)) 
-    let a = [Op "length"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let a = [Op "length"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6); Atom Nil]]]
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (K k) -> Assert.AreEqual (k, 2) 
@@ -328,7 +328,7 @@ let TestEq () =
 [<Test>]
 let TestCaar () =
     // (caar '(3 6)) 
-    let a = [Op "caar"; SubExp[Op "'" ; List [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let a = [Op "caar"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6); Atom Nil]]]
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (K k) -> Assert.AreEqual (k, 6) 
@@ -359,7 +359,10 @@ let TestIfThen() =
 
 [<Test>]
 let TestIfElse() =
-    // (if (= 42 42) (+ 1 41))
+    // (cond ((= 1 42) 
+    //        (None))
+    //        (else (+ 1 41)))
+    
     let ite = [ITE (SubExp [Op "="; Atom (K 1); Atom (K 42)],
                Atom None,
                SubExp [Op "+"; Atom (K 1); Atom (K 41)])]
