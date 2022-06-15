@@ -61,8 +61,7 @@ let notB elements =
     match elements with
         | [Atom (B b)] -> Atom (B (not b))
         | _ -> Atom None
-
-
+        
 // ---------------------------------------------
 // Operations on strings
 

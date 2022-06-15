@@ -30,6 +30,8 @@ type env = E of Map<vname, element>
 // AST stringifying
 //
 
+
+//TODO : review ITE
 let rec lispyList xs =
     match xs with
         | [] -> ""
@@ -70,6 +72,8 @@ let rec toStringEl element =
                                             | _ -> toStringEl parms
                         sprintf "%s %s" (toStringEl (L def)) stringyParms    
                     | _ -> ""
+            | ITE(_, _, _) -> failwith "not implemented yet"
+            
 and toStringExp exp =
     match exp with
         | [] -> ""
