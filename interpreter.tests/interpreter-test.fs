@@ -347,7 +347,7 @@ let TestEqList () =
 
 [<Test>]
 let TestIfThen() =
-    // (if (= 42 42) (+ 1 41))
+    // (if (= 42 42) (+ 1 41) (none))
     let ite = [ITE (SubExp [Op "="; Atom (K 42); Atom (K 42)],
                SubExp [Op "+"; Atom (K 1); Atom (K 41)],
                Atom None)]
@@ -359,10 +359,7 @@ let TestIfThen() =
 
 [<Test>]
 let TestIfElse() =
-    // (cond ((= 1 42) 
-    //        (None))
-    //        (else (+ 1 41)))
-    
+    // (if (= 1 42) (none) (+ 1 41))
     let ite = [ITE (SubExp [Op "="; Atom (K 1); Atom (K 42)],
                Atom None,
                SubExp [Op "+"; Atom (K 1); Atom (K 41)])]
@@ -371,3 +368,5 @@ let TestIfElse() =
         | Atom (K k) -> Assert.AreEqual (k, 42)
         | _ -> Assert.Fail()
     Assert.Pass()
+
+

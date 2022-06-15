@@ -22,7 +22,11 @@ let intersect (E outer) (E inner) =
     E res
 
 // ---------------------------------------------
-// SymbolTable
+// Lazy operations
+
+let lazyOp = function
+    | "'"  -> true
+    | _ -> false
 
 
 // ---------------------------------------------
@@ -53,8 +57,11 @@ let rec evalExp e env =
         | head :: tail -> 
             match head with 
                 | Op s ->   let funx = Map.find s symbTable
-                            let evaluated = List.foldBack (fun x acc -> evalEl x env :: acc) tail []
-                            funx evaluated
+                            if lazyOp s then
+                                funx tail
+                            else
+                                let evaluated = List.foldBack (fun x acc -> evalEl x env :: acc) tail []
+                                funx evaluated
                 | _ -> evalEl head env
 
 and evalEl el env =

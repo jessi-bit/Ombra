@@ -61,7 +61,7 @@ let notB elements =
     match elements with
         | [Atom (B b)] -> Atom (B (not b))
         | _ -> Atom None
-        
+
 // ---------------------------------------------
 // Operations on strings
 
@@ -87,17 +87,15 @@ let rec cat elements =
 
 let quote elements =
     match elements with
-        | [List l] -> 
-            match (List.head l) with
-                | Op _ -> SubExp l
-                | _ -> List l
+        | [SubExp l] -> 
+            List l
         | _ -> Atom None
 
 let cons elements =
     match elements with
         | (Atom _ as head) :: tail ->
             match tail with
-                | [Atom Nil] -> List (head :: [Atom Nil])
+                | [Atom Nil] -> List [head]
                 | [List els] -> List (head :: els)
                 | _ -> Atom None
         | _ -> Atom None
