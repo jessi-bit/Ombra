@@ -79,7 +79,7 @@ let TestLambdaBase1 () =
 let TestLambdaBase2 () =
     // (+ 1 ((lambda (x) x) 41))
     let lambdaDef = LambdaDef (["x"], Atom (Var "x"))
-    let l = [L (LambdaApp (lambdaDef, Atom (K 41)))]
+    let l = [L (LambdaApp lambdaDef); Atom (K 41)]
     let env = (E Map.empty)
     match (evalExp  l env) with
         | Atom (K k) -> Assert.AreEqual (41, k)
@@ -90,7 +90,7 @@ let TestLambdaBase2 () =
 let TestLambdaPlus () =
     // (+ 1 ((lambda (x) x) 41))
     let lambdaDef = LambdaDef (["x"], Atom (Var "x"))
-    let l = L (LambdaApp (lambdaDef, Atom (K 41)))
+    let l = SubExp [L (LambdaApp lambdaDef); Atom (K 41)]
     let exp = [Op "+"; Atom (K 1); l]
     let env = (E Map.empty)
     match (evalExp  exp env) with
@@ -103,10 +103,8 @@ let TestLambdaComplex () =
     // ((lambda (x y) (+ x y)) 1 2)
     let args = ["x"; "y"]
     let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
-    let parms = List[Atom (K 1); Atom (K 2)]
     let lambdadef = LambdaDef (args, body)
-    let lambda = [L (LambdaApp (lambdadef, parms))]
-
+    let lambda = [L (LambdaApp lambdadef); Atom (K 1); Atom (K 2)]
     let env = (E Map.empty)
     match (evalExp lambda env) with
         | Atom (K k) -> Assert.AreEqual (3, k)
@@ -134,10 +132,8 @@ let TestLambdaComplex2 () =
     let args = ["x"; "y"]
     let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
     let lambdadef = LambdaDef (args, body)
-    let parms = List[Atom (K 2); Atom (K 3)]
-    let lambda = L (LambdaApp (lambdadef, parms))
-    let parms'= List[Atom (K 1); lambda]
-    let mainLambda = [L (LambdaApp (lambdadef, parms'))]
+    let lambda = SubExp [L(LambdaApp lambdadef); Atom (K 2); Atom (K 3)]
+    let mainLambda = [L (LambdaApp lambdadef); Atom (K 1); lambda]
 
     let env = E Map.empty
     match (evalExp mainLambda env) with
@@ -147,7 +143,7 @@ let TestLambdaComplex2 () =
 
 [<Test>]
 let TestQuoteList () =
-    // ('(1 2 3))  
+    // '(1 2 3) 
     let quote = [Op "'"; SubExp[Atom (K 2); Atom (K 3); Atom (K 4)]]
     let env = E (Map.empty)
     match (evalExp quote env) with
@@ -350,7 +346,7 @@ let TestIfThen() =
     // (if (= 42 42) (+ 1 41) (none))
     let ite = [ITE (SubExp [Op "="; Atom (K 42); Atom (K 42)],
                SubExp [Op "+"; Atom (K 1); Atom (K 41)],
-               Atom None)]
+               Atom Nul)]
     let env = E Map.empty
     match (evalExp ite env) with
         | Atom (K k) -> Assert.AreEqual (k, 42)
@@ -361,7 +357,7 @@ let TestIfThen() =
 let TestIfElse() =
     // (if (= 1 42) (none) (+ 1 41))
     let ite = [ITE (SubExp [Op "="; Atom (K 1); Atom (K 42)],
-               Atom None,
+               Atom Nul,
                SubExp [Op "+"; Atom (K 1); Atom (K 41)])]
     let env = E Map.empty
     match (evalExp ite env) with

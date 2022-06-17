@@ -64,9 +64,8 @@ let TestLambdaAppString () =
     // ((lambda (x y) (+ x y)) 1 2)
     let args = ["x"; "y"]
     let body = SubExp [Op "+"; Atom (Var "x"); Atom (Var "y")]
-    let parms = List[Atom (K 1); Atom (K 2)]
     let lambdadef = LambdaDef (args, body)
-    let lambda = [L (LambdaApp (lambdadef, parms))]
+    let lambda = [L (LambdaApp lambdadef); Atom (K 1); Atom (K 2)]
     let s1 = toStringExp lambda
     Assert.AreEqual ("((lambda (x y) (+ x y)) 1 2)", s1)
     Assert.Pass()

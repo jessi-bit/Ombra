@@ -9,7 +9,7 @@ type atom =
     | B of bool
     | S of string
     | Var of vname
-    | None
+    | Nul
     | Nil
 
 type exp = element list
@@ -22,8 +22,7 @@ and element =
     | ITE of element * element * element
 and lambda =
     | LambdaDef of vname list * element
-    | LambdaApp of lambda * element
-
+    | LambdaApp of lambda 
 type env = E of Map<vname, element>
 
 // ---------------------------------------------
@@ -50,7 +49,7 @@ let rec toStringEl element =
 
                             | S(s) -> s + " "
                             | Var(v) -> v + " "
-                            | None -> sprintf "%s" "none"
+                            | Nul -> sprintf "%s" "Nul"
                             | Nil -> ""
             | List [] -> sprintf "%s" "()"
             | List (head :: tail) -> 
@@ -66,14 +65,9 @@ let rec toStringEl element =
                 match lambda with
                     | LambdaDef (args, body) -> 
                         sprintf "((%s (%s) %s)" "lambda" (lispyList args) ((toStringEl body).TrimEnd())
-                    | LambdaApp (LambdaDef (_,_) as def, parms) ->
-                        let stringyParms = match parms with
-                                            | List _ -> (toStringEl parms).Replace(")", "").Replace("(","")
-                                            | _ -> toStringEl parms
-                        sprintf "%s %s" (toStringEl (L def)) stringyParms    
                     | _ -> ""
             | ITE(_, _, _) -> failwith "not implemented yet"
-            
+      
 and toStringExp exp =
     match exp with
         | [] -> ""
@@ -84,4 +78,8 @@ and toStringExp exp =
             let res = (toStringEl head) + (toStringExp tail)
             match head with
                 | Op _ -> sprintf "(%s" res
-                | _ -> sprintf "%s" res
+                | L (LambdaApp (LambdaDef (_,_) as def)) ->
+                        let stringyParms = (toStringExp tail).Replace("(","")
+                        sprintf "%s %s" (toStringEl (L def)) stringyParms
+                | _ -> res
+                

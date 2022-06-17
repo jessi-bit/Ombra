@@ -8,12 +8,12 @@ open Ombra.Types
 let mapInt funct exp1 exp2 =
     match exp1, exp2 with
         | Atom (K k), Atom (K k2) -> Atom (K (funct k k2))
-        | Atom (K k), Atom None -> Atom (K k)
-        | _-> Atom None
+        | Atom (K k), Atom Nul -> Atom (K k)
+        | _-> Atom Nul
 
 let intOp elements funx expFun = 
     match elements with
-        | [] -> Atom None
+        | [] -> Atom Nul
         | [Atom (K _) as atom] -> atom
         | head :: tail ->
             mapInt funx head (expFun tail)
@@ -28,7 +28,7 @@ let rec minus elements =
 let cmp elements funct =
     match elements with
         | [Atom (K k); Atom (K k1)] -> Atom (B (funct k k1))
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 let greater elements =
     cmp elements (>)
@@ -42,12 +42,12 @@ let lesser elements =
 let mapBool funct exp1 exp2 =
     match exp1, exp2 with
         | Atom (B b1), Atom (B b2) -> Atom (B (funct b1 b2))
-        | Atom (B b), Atom None -> Atom (B b)
-        | _-> Atom None
+        | Atom (B b), Atom Nul -> Atom (B b)
+        | _-> Atom Nul
 
 let boolOp elements funx expFun =
     match elements with
-        | [] -> Atom None
+        | [] -> Atom Nul
         | [Atom (B _) as atom] -> atom
         | head :: tail ->
             mapBool funx head (expFun tail)
@@ -60,7 +60,7 @@ let rec orB elements =
 let notB elements =
     match elements with
         | [Atom (B b)] -> Atom (B (not b))
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 // ---------------------------------------------
 // Operations on strings
@@ -68,12 +68,12 @@ let notB elements =
 let mapSt funct exp1 exp2 =
     match exp1, exp2 with
         | Atom (S s), Atom (S s2) -> Atom (S (funct s s2))
-        | Atom (S s), Atom None -> Atom (S s)
-        | _-> Atom None
+        | Atom (S s), Atom Nul -> Atom (S s)
+        | _-> Atom Nul
 
 let strOp elements funx expFun =
     match elements with
-        | [] -> Atom None
+        | [] -> Atom Nul
         | [Atom (S _) as atom] -> atom
         | head :: tail ->
             mapSt funx head (expFun tail)
@@ -89,7 +89,7 @@ let quote elements =
     match elements with
         | [SubExp l] -> 
             List l
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 let cons elements =
     match elements with
@@ -97,29 +97,29 @@ let cons elements =
             match tail with
                 | [Atom Nil] -> List [head]
                 | [List els] -> List (head :: els)
-                | _ -> Atom None
-        | _ -> Atom None
+                | _ -> Atom Nul
+        | _ -> Atom Nul
 
 let car elements = 
     match elements with
         | [List (head :: _)] -> head
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 let cdr elements =
     match elements with
         | [List (_ :: tail)] -> List tail
-        | _ -> Atom None
+        | _ -> Atom Nul
 let caar elements =
     match elements with
         | [List (_ :: head2 :: _)] -> head2
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 //type checker -> len is ok for list and strings
 let len elements =
     match elements with 
         | [List ls] -> Atom (K (List.length ls - 1))
         | [Atom (S s)] -> Atom (K (String.length s))
-        | _ -> Atom None
+        | _ -> Atom Nul
 
 //Polymorfic operation
 let rec isEqual exp1 exp2 =
@@ -143,5 +143,4 @@ and areEquals xs ys =
 let eq elements =
     match elements with
         | [fst; snd] -> Atom (B (isEqual fst snd))
-        | _ -> Atom None
-
+        | _ -> Atom Nul

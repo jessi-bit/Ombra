@@ -28,6 +28,7 @@ let lazyOp = function
     | "'"  -> true
     | _ -> false
 
+//-------------------------------------------------
 
 // ---------------------------------------------
 // Interpreter
@@ -35,48 +36,46 @@ let lazyOp = function
 
 let rec evalExp e env =
     let symbTable =
-        Map.empty
-            .Add("+", plus)
-            .Add("*", mul) 
-            .Add("-", minus)
-            .Add("'", quote)
-            .Add("cons", cons)
-            .Add("car", car)
-            .Add("cdr", cdr)
-            .Add("caar", caar)
-            .Add("and", andB)
-            .Add("or", orB)
-            .Add("append", cat)
-            .Add("length", len)
-            .Add("not", notB)
-            .Add(">", greater)
-            .Add("<", lesser)
-            .Add("=", eq)
+            Map.empty
+                .Add("+", plus)
+                .Add("*", mul) 
+                .Add("-", minus)
+                .Add("'", quote)
+                .Add("cons", cons)
+                .Add("car", car)
+                .Add("cdr", cdr)
+                .Add("caar", caar)
+                .Add("and", andB)
+                .Add("or", orB)
+                .Add("append", cat)
+                .Add("length", len)
+                .Add("not", notB)
+                .Add(">", greater)
+                .Add("<", lesser)
+                .Add("=", eq)
     match e with
-        | [] -> Atom None
+        | [] -> Atom Nul
         | head :: tail -> 
-            match head with 
+            match (evalEl head env) with 
                 | Op s ->   let funx = Map.find s symbTable
                             if lazyOp s then
                                 funx tail
                             else
                                 let evaluated = List.foldBack (fun x acc -> evalEl x env :: acc) tail []
                                 funx evaluated
-                | _ -> evalEl head env
+                | L (LambdaApp lambdaDef) ->
+                    let (L (LambdaDef (args, body))) = evalEl (L lambdaDef) env  
+                    let parms' = List.map (fun x -> evalEl x env) tail
+                    let innerEnv = E (List.zip args parms' |> Map.ofList)
+                    let newEnv = intersect env innerEnv 
+                    evalEl body newEnv
+                | res -> res //si può valutare solo un ITE, LambdaDef, SubExp forse, ma gli atomi, op , liste da soli qui non hanno senso è un errore!! 
 
 and evalEl el env =
     match el with 
         | Atom (Var x) -> find x env
-        | Atom (_) | Op (_) | List(_) | L (LambdaDef _)  -> el
+        | Atom (_) | Op (_) | List(_) | L (_)  -> el
         | SubExp s  -> evalExp s env
-        | L (LambdaApp (lambdaDef, parms)) ->
-            let (L (LambdaDef (args, body))) = evalEl (L lambdaDef) env  
-            let parms' = match parms with
-                            | List lst -> List.map (fun x -> evalEl x env) lst
-                            | _ -> [evalEl parms env]
-            let innerEnv = E (List.zip args parms' |> Map.ofList)
-            let newEnv = intersect env innerEnv 
-            evalEl body newEnv
         | ITE (cnd, thn, ls) -> let (Atom (B condition)) = evalEl cnd env
                                 if condition
                                     then evalEl thn env
