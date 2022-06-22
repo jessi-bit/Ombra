@@ -142,3 +142,22 @@ let eq elements =
     match elements with
         | [fst; snd] -> Atom (B (isEqual fst snd))
         | _ -> Atom Nul
+
+let symbTable =
+            Map.empty
+                .Add("+", plus)
+                .Add("*", mul) 
+                .Add("-", minus)
+                .Add("'", quote)
+                .Add("cons", cons)
+                .Add("car", car)
+                .Add("cdr", cdr)
+                .Add("caar", caar)
+                .Add("and", andB)
+                .Add("or", orB)
+                .Add("append", cat)
+                .Add("length", len)
+                .Add("not", notB)
+                .Add(">", greater)
+                .Add("<", lesser)
+                .Add("=", eq)

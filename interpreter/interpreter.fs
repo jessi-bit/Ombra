@@ -35,24 +35,6 @@ let lazyOp = function
 //
 
 let rec evalExp e env =
-    let symbTable =
-            Map.empty
-                .Add("+", plus)
-                .Add("*", mul) 
-                .Add("-", minus)
-                .Add("'", quote)
-                .Add("cons", cons)
-                .Add("car", car)
-                .Add("cdr", cdr)
-                .Add("caar", caar)
-                .Add("and", andB)
-                .Add("or", orB)
-                .Add("append", cat)
-                .Add("length", len)
-                .Add("not", notB)
-                .Add(">", greater)
-                .Add("<", lesser)
-                .Add("=", eq)
     match e with
         | [] -> Atom Nul
         | head :: tail -> 

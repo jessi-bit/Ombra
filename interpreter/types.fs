@@ -28,7 +28,6 @@ type env = E of Map<vname, element>
 // AST stringifying
 //
 
-
 //TODO : review ITE
 let rec lispyList xs =
     match xs with
