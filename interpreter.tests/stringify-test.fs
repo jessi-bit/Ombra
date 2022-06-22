@@ -44,7 +44,7 @@ let TestSubExpString () =
 [<Test>]
 let TestListString () =
     // (2 3 4)
-    let lst = List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]
+    let lst = List[Atom (K 2); Atom (K 3); Atom (K 4)]
     let s = toStringEl lst
     Assert.AreEqual ("(2 3 4)", s)
     Assert.Pass()
@@ -73,7 +73,7 @@ let TestLambdaAppString () =
 [<Test>]
 let TestQuoteString () =
     // // ('(2 3 4)) 
-    let quote = [Op "'"; List[Atom (K 2); Atom (K 3); Atom (K 4); Atom Nil]]
+    let quote = [Op "'"; List[Atom (K 2); Atom (K 3); Atom (K 4)]]
     let s1 = toStringExp quote
     Assert.AreEqual ("('(2 3 4))", s1)
     Assert.Pass()

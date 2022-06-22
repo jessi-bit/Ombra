@@ -178,8 +178,8 @@ let TestConsSimple () =
 
 [<Test>]
 let TestConsChain () =
-    // (cons 2 (cons (3 nil)) 
-    let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); Atom Nil]]
+    // (cons 2 (cons (3 '())) 
+    let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); SubExp[Op "'"; SubExp []]]]
     let env = E Map.empty
     match (evalExp cons env) with
         | List lst -> Assert.AreEqual (areEquals lst ([Atom (K 2); Atom (K 3)]), true)
@@ -189,7 +189,7 @@ let TestConsChain () =
 [<Test>]
 let TestCar () =
     // (car '(1 2 3)) 
-    let car = [Op "car"; SubExp[Op "'" ;  SubExp[Atom (K 3); Atom (K 6); Atom Nil]]]
+    let car = [Op "car"; SubExp[Op "'" ;  SubExp[Atom (K 3); Atom (K 6)]]]
     let env = E Map.empty
     match (evalExp car env) with
         | Atom (K k) -> Assert.AreEqual (3, k)
@@ -201,7 +201,7 @@ let TestCar () =
 let TestCarComplex () =
     // (car (cons ((+ 1 2) (cons 4 (cons 3 nil)))) 
     let op = [Op "+"; Atom (K 1); Atom (K 2)]
-    let cons = [Op "cons"; SubExp op; SubExp [Op "cons"; Atom (K 4); SubExp [Op "cons"; Atom (K 3); Atom Nil]]]
+    let cons = [Op "cons"; SubExp op; SubExp [Op "cons"; Atom (K 4); SubExp [Op "cons"; Atom (K 3); SubExp[Op "'"; SubExp []]]]]
     let car = [Op "car"; SubExp cons]
     let env = E Map.empty
     match (evalExp car env) with
@@ -212,7 +212,7 @@ let TestCarComplex () =
 [<Test>]
 let TestCdrCons () =
     // (cdr (cons (2 (cons 3 nil)))) 
-    let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); Atom Nil]]
+    let cons = [Op "cons"; Atom (K 2); SubExp [Op "cons"; Atom (K 3); SubExp[Op "'"; SubExp []]]]
     let cdr = [Op "cdr"; SubExp cons]
     let env = E Map.empty
     match (evalExp cdr env) with
@@ -273,8 +273,8 @@ let TestLen () =
 
 [<Test>]
 let TestLen2 () =
-    // (length '(1 2 3)) 
-    let a = [Op "length"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6); Atom Nil]]]
+    // (length '(2 3)) 
+    let a = [Op "length"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6)]]]
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (K k) -> Assert.AreEqual (k, 2) 
@@ -324,7 +324,7 @@ let TestEq () =
 [<Test>]
 let TestCaar () =
     // (caar '(3 6)) 
-    let a = [Op "caar"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6); Atom Nil]]]
+    let a = [Op "caar"; SubExp[Op "'" ; SubExp [Atom (K 3); Atom (K 6)]]]
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (K k) -> Assert.AreEqual (k, 6) 
@@ -334,7 +334,7 @@ let TestCaar () =
 [<Test>]
 let TestEqList () =
     // (caar '(3 6)) 
-    let a = [Op "="; List[Atom (K 3); Atom(K 6); Atom Nil]; List [Atom (K 3); Atom (K 6); Atom Nil]]
+    let a = [Op "="; List[Atom (K 3); Atom(K 6)]; List [Atom (K 3); Atom (K 6)]]
     let env = E Map.empty
     match (evalExp a env) with
         | Atom (B b) -> Assert.AreEqual (b, true) 
