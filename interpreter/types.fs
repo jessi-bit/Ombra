@@ -10,7 +10,6 @@ type atom =
     | S of string
     | Var of vname
     | Nul
-    | Nil
 
 type exp = element list
 and element =
@@ -50,12 +49,11 @@ let rec toStringEl element =
                             | S(s) -> s + " "
                             | Var(v) -> v + " "
                             | Nul -> sprintf "%s" "Nul"
-                            | Nil -> ""
             | List [] -> sprintf "%s" "()"
             | List (head :: tail) -> 
                 let res =  "(" + (toStringEl head) + (toStringExp tail)
-                let res' = res.Replace(" )", "")
-                sprintf "%s" (res'.TrimEnd() + ")")
+                res.Replace(" )", "")
+                //sprintf "%s" (res'.TrimEnd() + ")")
             | Op o -> 
                 match o with
                     | "'" -> o

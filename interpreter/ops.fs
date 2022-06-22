@@ -95,7 +95,6 @@ let cons elements =
     match elements with
         | (Atom _ as head) :: tail ->
             match tail with
-                | [Atom Nil] -> List [head]
                 | [List els] -> List (head :: els)
                 | _ -> Atom Nul
         | _ -> Atom Nul
@@ -117,7 +116,7 @@ let caar elements =
 //type checker -> len is ok for list and strings
 let len elements =
     match elements with 
-        | [List ls] -> Atom (K (List.length ls - 1))
+        | [List ls] -> Atom (K (List.length ls))
         | [Atom (S s)] -> Atom (K (String.length s))
         | _ -> Atom Nul
 
@@ -129,7 +128,6 @@ let rec isEqual exp1 exp2 =
         | Atom (B b), Atom (B b1) -> b = b1
         | Atom (Var v), Atom (Var v1) -> v = v1
         | Op s, Op s1 -> s = s1
-        | Atom Nil, Atom Nil -> true
         | List l1, List l2 -> areEquals l1 l2
         | _-> false
 
