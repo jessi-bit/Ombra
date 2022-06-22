@@ -58,7 +58,6 @@ let TestMul () =
 [<Test>]
 let TestSumComp () =
     // (+ (+ 2 3) 5)
-    let sum = [Op "+"; Atom (K 1); Atom (K 2)]
     let sum2 = [Op "+"; SubExp[Op "+"; Atom (K 2); Atom (K 3)]; Atom (K 5)]
     let env = E (Map.empty)
     match (evalExp sum2 env) with
@@ -360,6 +359,7 @@ let TestIfElse() =
                Atom Nul,
                SubExp [Op "+"; Atom (K 1); Atom (K 41)])]
     let env = E Map.empty
+    printfn "eval %A" (evalExp ite env);
     match (evalExp ite env) with
         | Atom (K k) -> Assert.AreEqual (k, 42)
         | _ -> Assert.Fail()

@@ -37,10 +37,11 @@ let lazyOp = function
 let rec evalExp e env =
     match e with
         | [] -> Atom Nul
+        | [Atom _] | [List _] | [Op _] -> Atom Nul
         | head :: tail -> 
             match (evalEl head env) with 
                 | Op s ->   let funx = Map.find s symbTable
-                            if lazyOp s then
+                            if lazyOp s then 
                                 funx tail
                             else
                                 let evaluated = List.foldBack (fun x acc -> evalEl x env :: acc) tail []
@@ -51,14 +52,17 @@ let rec evalExp e env =
                     let innerEnv = E (List.zip args parms' |> Map.ofList)
                     let newEnv = intersect env innerEnv 
                     evalEl body newEnv
-                | res -> res //si può valutare solo un ITE, LambdaDef, SubExp forse, ma gli atomi, op , liste da soli qui non hanno senso è un errore!! 
+                | res -> res //si può valutare solo un ITE e un LambdaDef, ma gli atomi e liste da soli produrrebbero un errore
 
 and evalEl el env =
     match el with 
         | Atom (Var x) -> find x env
         | Atom (_) | Op (_) | List(_) | L (_)  -> el
         | SubExp s  -> evalExp s env
-        | ITE (cnd, thn, ls) -> let (Atom (B condition)) = evalEl cnd env
-                                if condition
-                                    then evalEl thn env
+        | ITE (cnd, thn, ls) ->  
+                                let (Atom (B condition)) = evalEl cnd env
+                                if condition then
+                                    printfn "El : %A" thn;
+                                    printfn "El : %A" (evalEl thn env);
+                                    evalEl thn env
                                     else evalEl ls env
