@@ -1,15 +1,10 @@
 ## Ideas and links
 
-### Useful notes from lectures
+We are trying to follow the simplicity expressed in https://norvig.com/lispy.html
 
-IDE-like environments that allow to model an interpreter for a programming language, they can generate lexer, interpreter, parser, and also
-a testing system for these interpreters.
+### Old idea
 
-https://redex.racket-lang.org/
-
-https://www.spoofax.dev/
-
-### Main idea
+(This is not what we did in the end, I'll leave it here for a possible future extension)
 
 Ombra uses the source file as memory.
 
@@ -26,14 +21,4 @@ but that sounds tricky to do.
 
 ### Useful link
 
-#### How to write a Lisp interpreter
-
-All interpreters seems to skip the recursion part, could we add recursion using the Y combinator?
-
-https://norvig.com/lispy.html
-
-https://oskarth.com/lisp-interpreter/
-
-https://maryrosecook.com/blog/post/little-lisp-interpreter
-
-https://github.com/kanaka/mal/tree/master/impls/fsharp
+https://www.spoofax.dev/ - Spoofax: The Language Designer's Workbench
