@@ -63,6 +63,7 @@ let progn env args =
 let operations =
     [("+", Proc (fun env args -> aritmeticOp env args (+)) );
      ("*", Proc (fun env args -> aritmeticOp env args (*)) );
+     ("-", Proc (fun env args -> aritmeticOp env args (-)) );
      ("quote", Proc (fun env form -> quote env form));
      ("progn", Proc (fun env args -> progn env args));
      ("lambda", Proc (lambda))
