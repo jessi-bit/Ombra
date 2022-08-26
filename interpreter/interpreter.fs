@@ -66,7 +66,7 @@ let cdr env args =
 
 let cons env args =
     match mapEval args env with
-        | [head; List (tail)] -> List ([head] @ tail)
+        | [head; List (tail)] -> List (head :: tail)
         | _ -> failwith (sprintf "Error cons, sexp %A\n" args)
 
 let quote env = function
