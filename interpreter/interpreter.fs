@@ -12,6 +12,7 @@ and env =
 
 // --------------------------------------
 // ENV
+
 let emptyEnv = Env Map.empty
 let extendEnv (Env env) bindings =
     Env (List.fold (fun env' (Symbol k, v) -> Map.add k v env') env bindings)
@@ -29,11 +30,11 @@ let rec eval sexp env =
     match sexp with
         | Symbol s -> lookUp s env
         | Float _ | String _ | Boolean _ -> sexp
-        | List (head :: tail) -> 
+        | List (head :: tail) ->
             match eval head env with
                 | Proc f -> f env tail
-                | _ -> failwith "Error"
-        | _ -> failwith "ErrorEval"
+                | _ -> failwith (sprintf "Error not a Proc: %A\n" head)
+        | _ -> failwith (sprintf "Unrecognised expression %A\n" sexp)
 
 let mapEval sexps env =
     List.map (fun sexp -> eval sexp env) sexps
@@ -45,41 +46,63 @@ let lambda env = function
             let bindings = List.zip parms args'
             let env' = extendEnv env bindings
             eval body env')
-    | _ -> failwith "Error lambda"
+    | sexp -> failwith (sprintf "Error lambda, sexp %A\n" sexp)
 
 let aritmeticOp env operands f =
     match (mapEval operands env) with
         | Float f1 :: floats -> 
             Float (List.fold (fun acc (Float f2) -> f acc f2) f1 floats)
-        | _ -> failwith "error op"
+        | _ -> failwith "Error op"
 
-let quote env = function 
+let car env args =
+    let [ sexp ] = args
+    match eval sexp env with
+        | List (head :: _) -> head
+        | _ -> failwith "Error car"
+
+let cdr env args =
+    let [ sexp ] = args
+    match eval sexp env with
+        | List (_ :: tail) -> List tail
+        | _ -> failwith "Error cdr"
+
+let cons env args =
+
+    match args with
+        | head :: tail -> let evaledHead = eval head env
+                          let [List evaledTail] = mapEval tail env
+                          List (List.insertAt 0 evaledHead evaledTail)
+        | _ -> failwith (sprintf "Error cons, sexp %A\n" args)
+
+let quote env = function
     | [form] -> form
     | _ -> failwith "Error quote"
 
+// TODO progn should evaluate all expressions and return the last one
+// so technically we are write if we don't allow side effects
 let progn env args =
     List.last (mapEval args env)
 
-let operations =
-    [("+", Proc (fun env args -> aritmeticOp env args (+)) );
-     ("*", Proc (fun env args -> aritmeticOp env args (*)) );
-     ("-", Proc (fun env args -> aritmeticOp env args (-)) );
-     ("quote", Proc (fun env form -> quote env form));
-     ("progn", Proc (fun env args -> progn env args));
-     ("lambda", Proc (lambda))
-    ] |> Map.ofList
 
-// ((lambda (x) (+ x 41)) 1)
-// (lambda (x) (+ x 41) 1)
-let sumLambda = List [
-            List [Symbol "lambda"; List [Symbol "x"];
-               List [Symbol "+"; Symbol "x"; Float 41];
-            ]; Float 1]
+let baseEnv =
+    extendEnv emptyEnv [
+        (Symbol "+", Proc (fun env args -> aritmeticOp env args (+)));
+        (Symbol "*", Proc (fun env args -> aritmeticOp env args (*)));
+        (Symbol "-", Proc (fun env args -> aritmeticOp env args (-)));
 
-let b = eval sumLambda (Env operations)
+        (Symbol "cons", Proc (cons));
+        (Symbol "car", Proc (car));
+        (Symbol "cdr", Proc (cdr));
+        (Symbol "quote", Proc (quote));
+        (Symbol "progn", Proc (fun env args -> progn env args));
+        (Symbol "lambda", Proc (lambda))
+    ]
 
-let prognA = List [Symbol "progn"; Float 42]
-let p1 = eval prognA (Env operations)
+
+// let b = eval sumLambda (Env operations)
+
+// let prognA = List [Symbol "progn"; Float 42]
+// let p1 = eval prognA (Env operations)
 
 // | List [Symbol "let"; List bindings; body] ->
 //      let binder binding =
