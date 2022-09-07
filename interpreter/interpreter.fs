@@ -116,4 +116,3 @@ let baseEnv =
 // let aFun = List [Symbol "+"; Float 1.0; List [Symbol "+"; Float 2.0; Float 3.0]]
 // let b = eval aFun emptyEnv
 
-
