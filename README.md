@@ -17,6 +17,7 @@ TBD
 Implement the following 
 
  - [ ] typechecker
+ - [ ] dependent types
  - [ ] monadic parser
    * https://www.cs.nott.ac.uk/~pszgmh/monparsing.pdf
    * https://www.reddit.com/r/programming/comments/ttg33v/an_f_monadic_parser_under_100_lines/
