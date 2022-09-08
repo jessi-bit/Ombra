@@ -55,22 +55,18 @@ let arithmeticOp env operands f =
         | _ -> failwith "Error op"
 
 let car env args =
-    let [ sexp ] = args
-    match eval sexp env with
-        | List (head :: _) -> head
+    match mapEval args env with
+        | [List (head :: _)] -> head
         | _ -> failwith "Error car"
 
 let cdr env args =
-    let [ sexp ] = args
-    match eval sexp env with
-        | List (_ :: tail) -> List tail
+    match mapEval args env with
+        | [List (_ :: tail)] -> List tail
         | _ -> failwith "Error cdr"
 
 let cons env args =
-    match args with
-        | head :: tail -> let evaledHead = eval head env
-                          let [List evaledTail] = mapEval tail env
-                          List (List.insertAt 0 evaledHead evaledTail)
+    match mapEval args env with
+        | [head; List (tail)] -> List (head :: tail)
         | _ -> failwith (sprintf "Error cons, sexp %A\n" args)
 
 let quote env = function
