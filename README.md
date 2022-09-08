@@ -6,7 +6,11 @@ A Lisp made with :heart: by [JessiBit](https://github.com/jessi-bit) and [lazywi
 
 We used Scheme as an inspiration.
 
+[Operational semantics](operational-semantics).
+
 ## Usage
+
+TBD
 
 ## Plan
 
