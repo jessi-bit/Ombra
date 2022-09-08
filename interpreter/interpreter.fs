@@ -48,7 +48,7 @@ let lambda env = function
             eval body env')
     | sexp -> failwith (sprintf "Error lambda, sexp %A\n" sexp)
 
-let aritmeticOp env operands f =
+let arithmeticOp env operands f =
     match (mapEval operands env) with
         | Float f1 :: floats -> 
             Float (List.fold (fun acc (Float f2) -> f acc f2) f1 floats)
@@ -67,7 +67,6 @@ let cdr env args =
         | _ -> failwith "Error cdr"
 
 let cons env args =
-
     match args with
         | head :: tail -> let evaledHead = eval head env
                           let [List evaledTail] = mapEval tail env
@@ -78,17 +77,19 @@ let quote env = function
     | [form] -> form
     | _ -> failwith "Error quote"
 
-// TODO progn should evaluate all expressions and return the last one
-// so technically we are write if we don't allow side effects
+// TODO progn evaluates all expressions and returns the last one
+// so technically if we don't allow side effects we should be ok with
+// this implementation
+// or even "eval (List.last args) env"
 let progn env args =
     List.last (mapEval args env)
 
 
 let baseEnv =
     extendEnv emptyEnv [
-        (Symbol "+", Proc (fun env args -> aritmeticOp env args (+)));
-        (Symbol "*", Proc (fun env args -> aritmeticOp env args (*)));
-        (Symbol "-", Proc (fun env args -> aritmeticOp env args (-)));
+        (Symbol "+", Proc (fun env args -> arithmeticOp env args (+)));
+        (Symbol "*", Proc (fun env args -> arithmeticOp env args (*)));
+        (Symbol "-", Proc (fun env args -> arithmeticOp env args (-)));
 
         (Symbol "cons", Proc (cons));
         (Symbol "car", Proc (car));
@@ -99,26 +100,10 @@ let baseEnv =
     ]
 
 
-// let b = eval sumLambda (Env operations)
-
-// let prognA = List [Symbol "progn"; Float 42]
-// let p1 = eval prognA (Env operations)
-
+// IDEA for let
 // | List [Symbol "let"; List bindings; body] ->
 //      let binder binding =
 //          match binding with
 //              | List [Symbol var; value] -> (var, eval value (Env env))
 //      let env' = extendEnv env (List.map binder bindings)
 //      eval body (Env env')
-// | List (Symbol funx :: args) ->
-//     let args' = List.map (fun arg -> eval arg (Env env)) args
-//     List.reduce (lookupOp funx) args'
-// | List (head :: tail) ->
-//     match eval head (Env env) with
-//         | Proc f -> f (Env env) tail      
-        
-
-// let aFun = List [Symbol "+"; Float 1.0; List [Symbol "+"; Float 2.0; Float 3.0]]
-// let b = eval aFun emptyEnv
-
-
