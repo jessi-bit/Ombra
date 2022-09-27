@@ -11,6 +11,7 @@ After prof Momigliano's last email
  - [ ] De Brujin indexes? Wat? How?
  - [ ] Dubois coq ml? 
  - [ ] Operational semantics?
+ - [ ] we need to have a `defun` or a `define` so that we can have functions defined at the top level
 
 Our answers
  - [ ] Run errors problem: we dont think we have that because we assume that at the interpreter stage all type checks gave "ok" (so not a defensive interpreter)
