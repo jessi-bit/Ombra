@@ -16,6 +16,7 @@ TBD
 
 Implement the following 
 
+ - [ ] functions as first class citizens?
  - [ ] typechecker
  - [ ] dependent types
  - [ ] monadic parser
