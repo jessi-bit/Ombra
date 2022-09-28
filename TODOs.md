@@ -17,3 +17,6 @@ After prof Momigliano's last email
 
 Our answers
  - [ ] Run errors problem: we dont think we have that because we assume that at the interpreter stage all type checks gave "ok" (so not a defensive interpreter)
+
+TODOs
+ - [ ] Ombra should be lazy. Because it's cool.
