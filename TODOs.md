@@ -14,6 +14,7 @@ After prof Momigliano's last email
  - [ ] Dubois coq ml? 
  - [ ] Operational semantics?
  - [ ] we need to have a `defun` or a `define` so that we can have functions defined at the top level
+ - [x] STLC (which prof Momigliano talks about) means Simply Typed Lambda Calculus!
 
 Our answers
  - [ ] Run errors problem: we dont think we have that because we assume that at the interpreter stage all type checks gave "ok" (so not a defensive interpreter)
