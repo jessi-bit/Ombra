@@ -39,7 +39,7 @@ let rec eval sexp env =
 let mapEval sexps env =
     List.map (fun sexp -> eval sexp env) sexps
 
-let lambda env = function
+let lambda _ = function
     | [List parms; body] ->
         Proc (fun env args ->
             let args' = List.map (fun a -> eval a env) args
@@ -69,7 +69,7 @@ let cons env args =
         | [head; List (tail)] -> List (head :: tail)
         | _ -> failwith (sprintf "Error cons, sexp %A\n" args)
 
-let quote env = function
+let quote _ = function
     | [form] -> form
     | _ -> failwith "Error quote"
 
