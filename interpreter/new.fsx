@@ -9,10 +9,10 @@ type ident = string
 type index = int
 
 type exp =
-    | Var   of ident
+    | Lit   of ident
     | Lam   of (ident * exp)
     | App   of (exp * exp)
-// ---
+    // --- outside Lambda Calculus
     | Const of float
     | Plus  of (exp * exp)
 
@@ -25,8 +25,8 @@ type exp =
 // precondition: z does not occur in M
 let rec α M x z =
     match M with
-        | Var v when v = x      -> Var z
-        | Var _                 -> M
+        | Lit v when v = x      -> Lit z
+        | Lit _                 -> M
         | Lam (v, _) when v = x -> M
         | Lam (v, e)            -> Lam (v, α e x z)
         | App (e, e')           -> App (α e x z, α e' x z)
@@ -47,20 +47,20 @@ let rec α M x z =
 let occursAsFree y N =
     let rec loop y N occurred =
         match N with
-            | Var _ -> occurred
+            | Lit _ -> occurred
             | Lam (v, _) when v = y -> false
             | Lam (_, e)            -> loop y e true
             | App (e, e')           -> (loop y e false) || (loop y e' false)
             | _                     -> false
     loop y N false
 
-occursAsFree "x" (Lam ("x", Var "x")) // false
-occursAsFree "y" (Lam ("x", Var "x")) // true
+occursAsFree "x" (Lam ("x", Lit "x")) // false
+occursAsFree "y" (Lam ("x", Lit "x")) // true
 // the following returns true but it's probably a bug, z never
 // appears in the whole structure, is that still the definition of
 // free variable?
-occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Var "y"))))))
-occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Var "x"))))))
+occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y"))))))
+occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x"))))))
 
 
 // TODO
@@ -68,9 +68,10 @@ let rec chooseIdent x y N e =
     "?"
 
 let rec β M x N =
+    printf "M: %A\n x: %A\n N: %A\n" M x N
     match M with
-        | Var v when v = x                 -> N
-        | Var _                            -> M
+        | Lit v when v = x                 -> N
+        | Lit _                            -> M
         | Lam (v, _) when v = x            -> M
         | Lam (v, e) when occursAsFree v N ->
             let v' = chooseIdent x v N e
@@ -78,6 +79,15 @@ let rec β M x N =
             Lam (v, β e' x N)
         | Lam (v, e)                       -> Lam (v, β e x N)
         | App (e, e')                      -> App ((β e x N), (β e' x N))
+        // --- outside Lambda Calculus
+        | Plus (e, e') -> let red = β e x N
+                          let red' = β e' x N
+                          printf "PROBLEM %A - %A - %A\n" x red red'
+                          match (red, red') with
+                              | (Lit v, Const c) when v = x -> Const c
+                              | (Lit _, Const _)            -> M
+                              | _ -> M
+        | _ -> M
 
 let rec eval = function
     | App (lam, arg) -> let argE = eval arg
@@ -86,11 +96,11 @@ let rec eval = function
     | e -> e
 
 // (λx.x)y
-let simple = App (Lam ("x", Var "x"), Var "y")
+let simple = App (Lam ("x", Lit "x"), Lit "y")
 eval simple
 
 // ((λx.λy.x)y)z
-let another = App (App (Lam ("x", Lam ("y", Var "x")), Var "y"), Var "z")
+let another = App (App (Lam ("x", Lam ("y", Lit "x")), Lit "y"), Lit "z")
 eval another
 
 // ----------------------------------------------
@@ -104,26 +114,28 @@ type value =
     | Num  of float
 and env = Map<ident,value>
 
-// TODO import our way to deal with functions
+// TODO import our way to deal with functions?
+// I dont think we should be dealing with Lits in evalO
 
+// evalOmbra
 let rec evalO env = function
-    | Lit v ->
-        // cerchiamo dentrofunev
-        // cerchiamo dentro env
-        // hai detto cazzate
-
-        Map.find v env
     | Const f -> Num f
     | Lam (ident, body) -> Clos (ident, body, env)
-    | App (lam, arg) -> let reduced = eval (App (lam, arg))
-                        evalO env reduced
-    | Plus (e1, e2) -> match (evalO env e1, evalO env e2) with
-                           | (Num a, Num b) -> Num (a + b)
+    // the idea is to use the model of computation embodied by the
+    // lambda calculus to perform the actual computations
+    | App e -> let reduced = eval (App e)
+               printf "REDUCED %A\n" reduced
+               evalO env reduced
+    | Plus (e, e') -> match (evalO env e, evalO env e') with
+                          | (Num n, Num n') -> Num (n + n')
+    | e -> failwith (sprintf "MISSING %A\n" e)
 
-let partial = App (Lam ("x", Lam ("y", Plus (Lit "x", Lit "y"))), Const 1)
-evalO Map.empty partial
-let result = App (partial, Const 41)
+let sum = App (Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41)), Const 1)
+evalO Map.empty sum
 
+
+// ---------------------------------------------------------
+// WHAT FOLLOWS ARE PROF MOMIGLIANO's approaches
 
 // type ident = string
 
@@ -131,7 +143,7 @@ let result = App (partial, Const 41)
 //     | Lam   of (ident * expr)
 //     | App   of expr * expr
 //     | Const of int
-//     | Var   of ident
+//     | Lit   of ident
 //     | Let   of (ident * expr * expr)
 
 // // why this?
@@ -141,7 +153,7 @@ let result = App (partial, Const 41)
 // let rec eval c e =
 //     match e with
 //         | Const n -> Num n // why this?
-//         | Var x -> Map.find x c
+//         | Lit x -> Map.find x c
 //         | Lam (x, e) -> Clos(x, e, c)
 //         | Let (x, e1, e2) -> // single variable let
 //             let v = eval c e1
@@ -157,8 +169,8 @@ let result = App (partial, Const 41)
 
 
 
-// let ex = eval Map.empty (App (Lam ("x", Var "x"), Const 42))
-// let ex1 = eval Map.empty (App (Lam ("x", Lam ("y", Var "x")), Const 42))
+// let ex = eval Map.empty (App (Lam ("x", Lit "x"), Const 42))
+// let ex1 = eval Map.empty (App (Lam ("x", Lam ("y", Lit "x")), Const 42))
 
 
 
