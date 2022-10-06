@@ -23,7 +23,8 @@ type exp =
 // and occur, but then the parsing would be a bit more difficult
 
 // precondition: z does not occur in M
-let rec α M x z =
+// returns M with all free occurrences of x replaced by z
+let rec α (M : exp) (x : string) (z : string) =
     match M with
         | Lit v when v = x      -> Lit z
         | Lit _                 -> M
@@ -36,72 +37,130 @@ let rec α M x z =
 // in a way that avoids capture. We say that (λx.M)N beta-reduces to M with N
 // substituted for x."
 
-// TODO check for correctness
-// my definition of a free variable is:
-// a variable that does not occur anywhere in the nested structure of Lam
-// as a parameter
+// * TODO check for correctness
+//  my definition of a free variable is:
+//  a variable that does not occur anywhere in the nested structure of Lam
+//  as a parameter
 //
-// λx.λy.x - has a free variable, y
-// λx.λy.xy - does not have free variables
-//
-let occursAsFree y N =
+//  λx.λy.x - has a free variable, y
+//  λx.λy.xy - does not have free variables
+//  
+// * TORESPOND 
+// The definition and examples are correct in my opinion. I would just add :
+// In the expression λx.M, every x in M is bound; every variable other than x that is free in M 
+// is free in λx.M.
+// In the expression MN the free variables of MN are the union of two sets: 
+// the free variables of M, and the free variables of N. (compitino in April).
+// Given (λx.y)(λy.yx) the free variables are {y, x}.
+
+let occursAsFree (y : string) (N : exp) =
     let rec loop y N occurred =
         match N with
             | Lit _ -> occurred
             | Lam (v, _) when v = y -> false
-            | Lam (_, e)            -> loop y e true
+            | Lam (_, e)            -> loop y e true  //** I think the bug is here
             | App (e, e')           -> (loop y e false) || (loop y e' false)
             | _                     -> false
     loop y N false
 
 occursAsFree "x" (Lam ("x", Lit "x")) // false
 occursAsFree "y" (Lam ("x", Lit "x")) // true
+
 // the following returns true but it's probably a bug, z never
 // appears in the whole structure, is that still the definition of
 // free variable?
+
+//J : no
 occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y"))))))
 occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x"))))))
 
+let rec occursFree (x : string) (N : exp)  =
+  match N with
+    | Lit y when y = x -> true //N is a variable and N is identical to x. (If i have N = y I cannot say x occursFree in y because x is not in!)
+    | Lam(y, e) -> y <> x && occursFree x e //N is of the form λy.e where y is different from x and x occurs free in e.
+    | App(e1, e2) | Plus (e1, e2) -> occursAsFree x e1 || occursFree x e2 //N is of the form App(E1 E2) and x occurs free in either E1 or E2 (or both).
+    | _ -> false
+
+occursFree "x" (Lam ("x", Lit "x")) // false
+occursFree "y" (Lam ("x", Lit "x")) // false because y is not in the lambda body
+occursFree "y" (Lam ("x", Lit "y")) // true
+occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y")))))) //false
+occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x")))))) //false
+occursFree "y" (Lam ("x", Plus (Lit "x", Lit "y"))) //true
 
 // TODO
 let rec chooseIdent x y N e =
     "?"
 
-let rec β M x N =
+let rec β (M : exp) (x : string) (N : exp) =
     printf "M: %A\n x: %A\n N: %A\n" M x N
     match M with
         | Lit v when v = x                 -> N
         | Lit _                            -> M
-        | Lam (v, _) when v = x            -> M
-        | Lam (v, e) when occursAsFree v N ->
+        | Lam (v, _) when v = x            -> M  //No free occurrences of x in M
+        | Lam (v, e) when occursFree v N ->
             let v' = chooseIdent x v N e
-            let e' = α e v v'
-            Lam (v, β e' x N)
-        | Lam (v, e)                       -> Lam (v, β e x N)
-        | App (e, e')                      -> App ((β e x N), (β e' x N))
+            let e' = α e v v'                    
+            Lam (v', β e' x N)
+        | Lam (v, e)                       -> Lam (v, β e x N)    
+        | App (e, e')                      -> App ((β e x N), (β e' x N))  
         // --- outside Lambda Calculus
         | Plus (e, e') -> let red = β e x N
                           let red' = β e' x N
-                          printf "PROBLEM %A - %A - %A\n" x red red'
-                          match (red, red') with
-                              | (Lit v, Const c) when v = x -> Const c
-                              | (Lit _, Const _)            -> M
-                              | _ -> M
+                          Plus(red, red')
+                        //   printf "PROBLEM %A - %A - %A\n" x red red'
+                        //   match (red, red') with
+                        //       | (Lit v, Const c) when v = x -> Const c
+                        //       | (Lit _, Const _)            -> M
+                        //       | _ -> M
         | _ -> M
 
+    
 let rec eval = function
+    | Plus (e1, e2) -> 
+        match (eval e1, eval e2) with
+            | (Const c, Lit x) -> Plus (Const c, Lit x)
+            | (Lit x, Const c) -> Plus (Lit x, Const c)
+            | (Lit x, Lit y) -> Plus (Lit x, Lit y)
+            | (Const c1, Const c2) -> Const (c1 + c2)
+            | _ -> failwith "Not implemented"
     | App (lam, arg) -> let argE = eval arg
                         match (eval lam) with
-                            | Lam (var, body) -> β body var argE
-    | e -> e
+                            | Lam (var, body) -> eval (β body var argE)
+                            |  _ -> failwith "Error lambda"  
+    | e -> e                     
 
-// (λx.x)y
-let simple = App (Lam ("x", Lit "x"), Lit "y")
-eval simple
 
-// ((λx.λy.x)y)z
+//**(λx.x)y
+let simple = Lam ("x", Lit "x")
+eval (App (simple, Const 2))
+
+//--------------------------------------------------------------------------------------------------------
+//**((λx.λy.x)y)z
 let another = App (App (Lam ("x", Lam ("y", Lit "x")), Lit "y"), Lit "z")
-eval another
+eval another 
+//Steps in reduction
+β (Lam ("y", Lit "x")) "x" (Lit "y") //Lam ? -> y
+β (Lam ("?", Lit "y")) "?" (Lit "z")  //Lam ? -> y
+β (Lit "y") "?" (Lit "z") 
+
+//---------------------------------------------------------------------------------------------------------
+//**(λx.x + 2)3
+let plus0 = App (Lam ("x", Plus (Lit "x", Const 2)), Const 3)
+eval plus0  
+//Steps in reduction
+β (Plus (Lit "x", Lit "y")) "x" (Const 3) // (3 + y)
+
+//----------------------------------------------------------------------------------------------------------
+//**(λx.x+y)3
+let plus01 = App (Lam ("x", Plus (Lit "x", Lit "y")), Const 3)
+eval plus01
+
+//----------------------------------------------------------------------------------------------------------
+//**((λx.λy.x + y)2)3)
+let innerBody = Lam ("y", Plus(Lit "x", Lit "y"))
+let plus1 = App (App (Lam ("x", innerBody), Const 2), Const 3)
+eval plus1
 
 // ----------------------------------------------
 // Ombra's interpreter - Lisp
