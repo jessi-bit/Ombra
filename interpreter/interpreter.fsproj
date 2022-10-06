@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <!-- never use *.fs -->
-    <Compile Include="interpreter.fs" />
+    <Compile Include="interpreter.fsx" />
   </ItemGroup>
 
 </Project>
