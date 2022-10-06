@@ -54,20 +54,38 @@ let rec α (M : exp) (x : string) (z : string) =
 // Given (λx.y)(λy.yx) the free variables are {y, x}.
 
 let rec occursFree (x : string) (N : exp)  =
-  match N with
-    | Lit y when y = x -> true 
-    | Lam(y, e) -> y <> x && occursFree x e 
-    | App(e1, e2) | Plus (e1, e2) -> occursFree x e1 || occursFree x e2 
-    | _ -> false
-
+    match N with
+        | Lit y when y = x -> true
+        | Lam(y, e) -> y <> x && occursFree x e 
+        | App(e1, e2) | Plus (e1, e2) -> occursFree x e1 || occursFree x e2 
+        | _ -> false
+  
 occursFree "x" (Lam ("x", Lit "x")) // false
 occursFree "y" (Lam ("x", Lit "x")) // false because y is not in the lambda body
 occursFree "y" (Lam ("x", Lit "y")) // true
 occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y")))))) //false
 occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x")))))) //false
 occursFree "y" (Lam ("x", Plus (Lit "x", Lit "y"))) //true
+occursFree "x" (Lam ("x", Plus (Lit "x", Const 2))) //false
+    
+let areThereFreeVars exp =
+    let rec loop exp varsSet =
+        match exp with 
+            | Lit x -> not (Set.contains x varsSet)
+            | Const _ -> false
+            | Lam (var, body) as e -> 
+                occursFree var e || loop body (Set.add var varsSet)
+            | Plus (e1, e2) | App (e1, e2) -> 
+                loop e1 varsSet || loop e2 varsSet
+    loop exp (Set.empty)
 
-// TODO
+areThereFreeVars (Lit "x") 
+areThereFreeVars (Plus (Lit "x", Const 2)) //true
+areThereFreeVars (Lam ("x", Plus (Lit "x", Const 2))) //false
+areThereFreeVars (Lam ("x", Plus (Lit "x", Lit "y"))) //true
+areThereFreeVars (App (Lam ("x", Plus (Lit "x", Lit "y")), Const 3))
+
+//TODO
 let rec chooseIdent x y N e =
     "?"
 
@@ -92,12 +110,6 @@ let rec β (M : exp) (x : string) (N : exp) =
                         //       | _ -> M
         | _ -> M
 
-// let rec areThereFreeVars = function
-//     | Lit _ -> true
-//     | Const _ -> false
-//     | Lam (var, body) -> 
-//     | Plus (e1, e2) | App (e1, e2) -> 
-//         areThereFreeVars e1 || areThereFreeVars e2
 
 let rec eval = function
     | App (lam, arg) -> let argE = eval arg
@@ -160,7 +172,7 @@ and env = Map<ident,value>
     //         | (Lit x, Lit y) -> Plus (Lit x, Lit y)
     //         | (Const c1, Const c2) -> Const (c1 + c2)
     //         | _ -> failwith "Not implemented"
-    
+
 let rec evalO env = function
     | Const f -> Num f
     | Lam (ident, body) -> Clos (ident, body, env)
