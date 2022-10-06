@@ -15,6 +15,8 @@ type exp =
     // --- outside Lambda Calculus
     | Const of float
     | Plus  of (exp * exp)
+    | Nil
+    | Cons  of (exp * exp)
 
 
 // alpha-conversion and beta-reduction are explained here
@@ -31,6 +33,8 @@ let rec α (M : exp) (x : string) (z : string) =
         | Lam (v, _) when v = x -> M
         | Lam (v, e)            -> Lam (v, α e x z)
         | App (e, e')           -> App (α e x z, α e' x z)
+        | Plus (e, e')          -> Plus (α e x z, α e' x z)
+        | Cons (head, tail)     -> Cons (α head x z, α tail x z)
 
 // (λx.M)N → β M[N/x]
 // "[...] the notation means M with all free occurrences of x replaced with N
@@ -40,7 +44,8 @@ let rec occursFree (x : string) (N : exp)  =
     match N with
         | Lit y when y = x -> true
         | Lam(y, e) -> y <> x && occursFree x e 
-        | App(e1, e2) | Plus (e1, e2) -> occursFree x e1 || occursFree x e2 
+        | App (e1, e2) | Plus (e1, e2) | Cons (e1, e2) ->
+            occursFree x e1 || occursFree x e2
         | _ -> false
   
 occursFree "x" (Lam ("x", Lit "x")) // false
@@ -50,23 +55,6 @@ occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y")))))) //false
 occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x")))))) //false
 occursFree "y" (Lam ("x", Plus (Lit "x", Lit "y"))) //true
 occursFree "x" (Lam ("x", Plus (Lit "x", Const 2))) //false
-    
-let areThereFreeVars exp =
-    let rec loop exp varsSet =
-        match exp with 
-            | Lit x -> not (Set.contains x varsSet)
-            | Const _ -> false
-            | Lam (var, body) as e -> 
-                occursFree var e || loop body (Set.add var varsSet)
-            | Plus (e1, e2) | App (e1, e2) -> 
-                loop e1 varsSet || loop e2 varsSet
-    loop exp (Set.empty)
-
-areThereFreeVars (Lit "x") 
-areThereFreeVars (Plus (Lit "x", Const 2)) //true
-areThereFreeVars (Lam ("x", Plus (Lit "x", Const 2))) //false
-areThereFreeVars (Lam ("x", Plus (Lit "x", Lit "y"))) //true
-areThereFreeVars (App (Lam ("x", Plus (Lit "x", Lit "y")), Const 3))
 
 //TODO
 let rec chooseIdent x y N e =
@@ -77,16 +65,16 @@ let rec β (M : exp) (x : string) (N : exp) =
         | Lit v when v = x                 -> N
         | Lit _                            -> M
         | Lam (v, _) when v = x            -> M
-        | Lam (v, e) when occursFree v N ->
+        | Lam (v, e) when occursFree v N   ->
             let v' = chooseIdent x v N e
             let e' = α e v v'                    
             Lam (v', β e' x N)
         | Lam (v, e)                       -> Lam (v, β e x N)    
         | App (e, e')                      -> App ((β e x N), (β e' x N))  
         // --- outside Lambda Calculus
-        | Plus (e, e')                     -> Plus((β e x N), (β e' x N))
+        | Plus (e, e')                     -> Plus ((β e x N), (β e' x N))
+        | Cons (e, e')                     -> Cons ((β e x N), (β e' x N))
         | _ -> M
-
 
 let rec eval = function
     | App (lam, arg) -> let argE = eval arg
@@ -94,7 +82,6 @@ let rec eval = function
                             | Lam (var, body) -> eval (β body var argE)
                             |  _ -> failwith "Error lambda"  
     | e -> e                     
-
 
 //**(λx.x)y
 let simple = Lam ("x", Lit "x")
@@ -134,6 +121,7 @@ eval plus1
 type value =
     | Clos of (ident * exp * env)
     | Num  of float
+    | Lst of value list
 and env = Map<ident,value>
 
 // TODO import our way to deal with functions?
@@ -149,6 +137,14 @@ let rec evalO env = function
                evalO env reduced
     | Plus (e, e') -> match (evalO env e, evalO env e') with
                           | (Num n, Num n') -> Num (n + n')
+    | Cons (head, tail) -> let head' = evalO env head
+                           let (Lst tail') = match tail with
+                                                 | Nil -> Lst []
+                                                 | _   -> evalO env tail
+                           Lst (head' :: tail')
+
+let cons = App (Lam ("x", Cons (Lit "x", Nil)), Const 42)
+evalO Map.empty cons
 
 let sum = App (Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41)), Const 1)
 evalO Map.empty sum
