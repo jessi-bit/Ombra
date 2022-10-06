@@ -53,32 +53,11 @@ let rec α (M : exp) (x : string) (z : string) =
 // the free variables of M, and the free variables of N. (compitino in April).
 // Given (λx.y)(λy.yx) the free variables are {y, x}.
 
-let occursAsFree (y : string) (N : exp) =
-    let rec loop y N occurred =
-        match N with
-            | Lit _ -> occurred
-            | Lam (v, _) when v = y -> false
-            | Lam (_, e)            -> loop y e true  //** I think the bug is here
-            | App (e, e')           -> (loop y e false) || (loop y e' false)
-            | _                     -> false
-    loop y N false
-
-occursAsFree "x" (Lam ("x", Lit "x")) // false
-occursAsFree "y" (Lam ("x", Lit "x")) // true
-
-// the following returns true but it's probably a bug, z never
-// appears in the whole structure, is that still the definition of
-// free variable?
-
-//J : no
-occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y"))))))
-occursAsFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x"))))))
-
 let rec occursFree (x : string) (N : exp)  =
   match N with
-    | Lit y when y = x -> true //N is a variable and N is identical to x. (If i have N = y I cannot say x occursFree in y because x is not in!)
-    | Lam(y, e) -> y <> x && occursFree x e //N is of the form λy.e where y is different from x and x occurs free in e.
-    | App(e1, e2) | Plus (e1, e2) -> occursAsFree x e1 || occursFree x e2 //N is of the form App(E1 E2) and x occurs free in either E1 or E2 (or both).
+    | Lit y when y = x -> true 
+    | Lam(y, e) -> y <> x && occursFree x e 
+    | App(e1, e2) | Plus (e1, e2) -> occursFree x e1 || occursFree x e2 
     | _ -> false
 
 occursFree "x" (Lam ("x", Lit "x")) // false
@@ -105,9 +84,7 @@ let rec β (M : exp) (x : string) (N : exp) =
         | Lam (v, e)                       -> Lam (v, β e x N)    
         | App (e, e')                      -> App ((β e x N), (β e' x N))  
         // --- outside Lambda Calculus
-        | Plus (e, e') -> let red = β e x N
-                          let red' = β e' x N
-                          Plus(red, red')
+        | Plus (e, e')                     -> Plus((β e x N), (β e' x N))
                         //   printf "PROBLEM %A - %A - %A\n" x red red'
                         //   match (red, red') with
                         //       | (Lit v, Const c) when v = x -> Const c
