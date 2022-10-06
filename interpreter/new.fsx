@@ -92,15 +92,14 @@ let rec β (M : exp) (x : string) (N : exp) =
                         //       | _ -> M
         | _ -> M
 
-    
+// let rec areThereFreeVars = function
+//     | Lit _ -> true
+//     | Const _ -> false
+//     | Lam (var, body) -> 
+//     | Plus (e1, e2) | App (e1, e2) -> 
+//         areThereFreeVars e1 || areThereFreeVars e2
+
 let rec eval = function
-    | Plus (e1, e2) -> 
-        match (eval e1, eval e2) with
-            | (Const c, Lit x) -> Plus (Const c, Lit x)
-            | (Lit x, Const c) -> Plus (Lit x, Const c)
-            | (Lit x, Lit y) -> Plus (Lit x, Lit y)
-            | (Const c1, Const c2) -> Const (c1 + c2)
-            | _ -> failwith "Not implemented"
     | App (lam, arg) -> let argE = eval arg
                         match (eval lam) with
                             | Lam (var, body) -> eval (β body var argE)
@@ -154,6 +153,14 @@ and env = Map<ident,value>
 // I dont think we should be dealing with Lits in evalO
 
 // evalOmbra
+// | Plus (e1, e2) -> 
+    //     match (eval e1, eval e2) with
+    //         | (Const c, Lit x) -> Plus (Const c, Lit x)
+    //         | (Lit x, Const c) -> Plus (Lit x, Const c)
+    //         | (Lit x, Lit y) -> Plus (Lit x, Lit y)
+    //         | (Const c1, Const c2) -> Const (c1 + c2)
+    //         | _ -> failwith "Not implemented"
+    
 let rec evalO env = function
     | Const f -> Num f
     | Lam (ident, body) -> Clos (ident, body, env)
