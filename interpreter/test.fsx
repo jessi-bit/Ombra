@@ -63,14 +63,15 @@ expect "evalO lambda sum free" (fun () ->
 expect "evalO plus" (fun () ->
                      evalO (Map.add "x" (Num 1) Map.empty) (Plus (Lit "x", Const 41))) (Num 42)
 
+expect "evalO basic bool" (fun () ->
+                           evalO Map.empty (Bool (false))) (Boo false)
+
+expect "evalO if" (fun () ->
+                   let lambda = App (Lam ("x", Bool false), Bool true)
+                   evalO Map.empty (If (lambda, Plus (Const 1, Const 2), Lam ("x", Lit "x")))) (Clos ("x", Lit "x", Map.empty))
 
 
-
-
-
-
-
-
+//let, defun and operations abstractions are missing
 
 
 
