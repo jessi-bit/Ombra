@@ -96,8 +96,8 @@ let rec evalO env = function
     | Lam (ident, body) -> Clos (ident, body, env)
     // the idea is to use the model of computation embodied by the
     // lambda calculus to perform the actual computations
-    | App e -> let reduced = eval (App e)
-               evalO env reduced
+    | App e -> let βreduced = eval (App e)
+               evalO env βreduced
     | Plus (e, e') -> match (evalO env e, evalO env e') with
                           | (Num n, Num n') -> Num (n + n')
     | Cons (head, tail) -> let head' = evalO env head
@@ -105,17 +105,3 @@ let rec evalO env = function
                                                  | Nil -> Lst []
                                                  | _   -> evalO env tail
                            Lst (head' :: tail')
-
-let cons = App (Lam ("x", Cons (Lit "x", Nil)), Const 42)
-evalO Map.empty cons
-
-let cons2 = App (Lam ("x", Cons (Lit "x", Cons (Lit "y", Cons (Lit "x", Nil)))), Const 42)
-evalO (Map.add "y" (Num 0) Map.empty) cons2
-
-let sum = App (Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41)), Const 1)
-evalO Map.empty sum
-
-let sumFree = Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41))
-evalO Map.empty sumFree
-
-evalO (Map.add "x" (Num 1) Map.empty) (Plus (Lit "x", Const 41))

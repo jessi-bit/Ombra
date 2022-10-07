@@ -36,10 +36,32 @@ expect "eval sum all" (fun () ->
                        let innerBody = Lam ("y", Plus(Lit "x", Lit "y"))
                        eval (App (App (Lam ("x", innerBody), Const 2), Const 3))) (Plus (Const 2, Const 3))
 
+// (((λx.λy.λz.x + y + z)2)3)4)    l x -> l y -> (l z -> x + y + z) 2
+expect "eval sum all" (fun () ->
+                       let innerBody = App (Lam ("z", Plus (Lit "x", Plus (Lit "z", Lit "y"))), Const 2)
+                       let second = App (Lam ("y", innerBody), Const 3)
+                       let outer = App (Lam ("x", second), Const 4)
+                       eval outer) (Plus (Const 4, Plus (Const 2, Const 3)))
 
 
+expect "evalO lambda id" (fun () ->
+                          evalO Map.empty (App (Lam ("x", Cons (Lit "x", Nil)), Const 42))) (Lst [Num 42])
+
+expect "evalO lambda cons" (fun () ->
+                          let cons2 = App (Lam ("x", Cons (Lit "x", Cons (Lit "y", Cons (Lit "x", Nil)))), Const 42) 
+                          evalO (Map.add "y" (Num 0) Map.empty) cons2) (Lst [Num 42; Num 0; Num 42])
 
 
+expect "evalO lambda plus" (fun () ->
+                            let sum = App (Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41)), Const 1)
+                            evalO Map.empty sum) (Num 42)
+
+expect "evalO lambda sum free" (fun () ->
+                               let sumFree = Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41))
+                               evalO Map.empty sumFree) (Clos ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41.0), Map.empty))
+
+expect "evalO plus" (fun () ->
+                     evalO (Map.add "x" (Num 1) Map.empty) (Plus (Lit "x", Const 41))) (Num 42)
 
 
 
