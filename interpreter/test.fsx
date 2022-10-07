@@ -70,12 +70,22 @@ expect "evalO if" (fun () ->
                    let lambda = App (Lam ("x", Bool false), Bool true)
                    evalO Map.empty (If (lambda, Plus (Const 1, Const 2), Lam ("x", Lit "x")))) (Clos ("x", Lit "x", Map.empty))
 
+expect "let simple" (fun () ->
+                     let l = Let ("x", Const 41, Plus (Lit "x", Const 1))
+                     evalO Map.empty l) (Num 42)
 
-//let, defun and operations abstractions are missing
+expect "let lazy?" (fun () ->
+                    let lambda = Lam ("x", Plus (Lit "x", Const 1))
+                    let l = Let ("x", (App (lambda, Const 40)), Plus (Lit "x", Const 1))
+                    evalO Map.empty l) (Num 42)
 
+expect "let jessibit" (fun () ->
+                        let part = App (Lam ("x", Plus (Lit "x", Lit "y")), Const 2)
+                        let app = App (Lam ("y", part), Const 5)
+                        let l = Let ("x", app, App (Lam ("y", Lit "y"), Lit "x"))
+                        evalO Map.empty l) (Num 7)
 
-
-
+// defun and operations abstractions are missing
 
 // (+ 1 41)
 // expect 42 List[Symbol "+"; Float 1.0 ; Float 41.0] []

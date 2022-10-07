@@ -21,9 +21,11 @@ type exp =
     | Nil
     | Cons  of (exp * exp)
     | If    of (exp * exp * exp)
+    | Let   of (ident * exp * exp)
     
 // alpha-conversion and beta-reduction are explained here
 // https://pages.cs.wisc.edu/~horwitz/CS704-NOTES/1.LAMBDA-CALCULUS.html#beta
+
 // TODO using De Bruijn indexes would remove the need for alpha-conversion
 // and occur, but then the parsing would be a bit more difficult
 
@@ -39,6 +41,8 @@ let rec α M x z =
         | Plus (e, e')          -> Plus (α e x z, α e' x z)
         | Cons (head, tail)     -> Cons (α head x z, α tail x z)
         | If (cond, ifBranch, elseBranch) -> If (α cond x z, α ifBranch x z, α elseBranch x z)
+        | Let (v, _, _) when v = x  -> M
+        | Let (v, assignment, body) -> Let (v, α assignment x z, α body x z)
 
 // (λx.M)N → β M[N/x]
 // "[...] the notation means M with all free occurrences of x replaced with N
@@ -47,11 +51,12 @@ let rec α M x z =
 let rec occursFree x N  =
     match N with
         | Lit y when y = x -> true
-        | Lam(y, e) -> y <> x && occursFree x e 
+        | Lam (y, e) -> y <> x && occursFree x e
         | App (e1, e2) | Plus (e1, e2) | Cons (e1, e2) ->
             occursFree x e1 || occursFree x e2
         | If (cond, ifBranch, elseBranch) ->
             occursFree x cond || occursFree x ifBranch || occursFree x elseBranch
+        | Let (y, assignment, body) -> y <> x && occursFree x assignment && occursFree x body
         | _ -> false
   
 //TODO
@@ -73,6 +78,13 @@ let rec β M x N =
         | Plus (e, e')                     -> Plus ((β e x N), (β e' x N))
         | Cons (e, e')                     -> Cons ((β e x N), (β e' x N))
         | If (cond, ifBranch, elseBranch)  -> If ((β cond x N), (β ifBranch x N), (β elseBranch x N))
+        | Let (v, _, _) when v = x         -> M
+        | Let (v, assignment, body) when occursFree v N ->
+            let v' = chooseIdent x v N body
+            let body' = α body v v'
+            Let (v', β assignment x N, β body' x N)
+        | Let (v, assignment, body)                     ->
+            Let (v, β assignment x N, β body x N)
         | _ -> M
 
 let rec eval = function
@@ -115,3 +127,8 @@ let rec evalO env = function
     | If (cond, ifBranch, elseBranch) ->
         let (Boo cond') = evalO env cond
         if cond' then evalO env ifBranch else evalO env elseBranch
+    | Let (ident, assignment, body) ->
+        // TODO is this lazy?
+        let assignment' = evalO env assignment
+        let env' = Map.add ident assignment' env
+        evalO env' body
