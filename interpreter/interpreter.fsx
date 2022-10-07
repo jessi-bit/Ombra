@@ -1,3 +1,5 @@
+module Ombra.Interpreter
+
 // ----------------------------------------------
 // Ombra's interpreter - Lambda Calculus kernel
 
@@ -26,7 +28,7 @@ type exp =
 
 // precondition: z does not occur in M
 // returns M with all free occurrences of x replaced by z
-let rec α (M : exp) (x : string) (z : string) =
+let rec α M x z =
     match M with
         | Lit v when v = x      -> Lit z
         | Lit _                 -> M
@@ -40,7 +42,7 @@ let rec α (M : exp) (x : string) (z : string) =
 // "[...] the notation means M with all free occurrences of x replaced with N
 // in a way that avoids capture. We say that (λx.M)N beta-reduces to M with N
 // substituted for x."
-let rec occursFree (x : string) (N : exp)  =
+let rec occursFree x N  =
     match N with
         | Lit y when y = x -> true
         | Lam(y, e) -> y <> x && occursFree x e 
@@ -48,19 +50,11 @@ let rec occursFree (x : string) (N : exp)  =
             occursFree x e1 || occursFree x e2
         | _ -> false
   
-occursFree "x" (Lam ("x", Lit "x")) // false
-occursFree "y" (Lam ("x", Lit "x")) // false because y is not in the lambda body
-occursFree "y" (Lam ("x", Lit "y")) // true
-occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "y")))))) //false
-occursFree "z" (Lam ("w", (Lam ("x", (Lam ("y", Lit "x")))))) //false
-occursFree "y" (Lam ("x", Plus (Lit "x", Lit "y"))) //true
-occursFree "x" (Lam ("x", Plus (Lit "x", Const 2))) //false
-
 //TODO
 let rec chooseIdent x y N e =
     "?"
 
-let rec β (M : exp) (x : string) (N : exp) =
+let rec β M x N =
     match M with
         | Lit v when v = x                 -> N
         | Lit _                            -> M
@@ -82,37 +76,6 @@ let rec eval = function
                             | Lam (var, body) -> eval (β body var argE)
                             |  _ -> failwith "Error lambda"  
     | e -> e                     
-
-//**(λx.x)y
-let simple = Lam ("x", Lit "x")
-eval (App (simple, Const 2))
-
-//--------------------------------------------------------------------------------------------------------
-//**((λx.λy.x)y)z
-let another = App (App (Lam ("x", Lam ("y", Lit "x")), Lit "y"), Lit "z")
-eval another 
-//Steps in reduction
-β (Lam ("y", Lit "x")) "x" (Lit "y") //Lam ? -> y
-β (Lam ("?", Lit "y")) "?" (Lit "z")  //Lam ? -> y
-β (Lit "y") "?" (Lit "z") 
-
-//---------------------------------------------------------------------------------------------------------
-//**(λx.x + 2)3
-let plus0 = App (Lam ("x", Plus (Lit "x", Const 2)), Const 3)
-eval plus0  
-//Steps in reduction
-β (Plus (Lit "x", Lit "y")) "x" (Const 3) // (3 + y)
-
-//----------------------------------------------------------------------------------------------------------
-//**(λx.x+y)3
-let plus01 = App (Lam ("x", Plus (Lit "x", Lit "y")), Const 3)
-eval plus01
-
-//----------------------------------------------------------------------------------------------------------
-//**((λx.λy.x + y)2)3)
-let innerBody = Lam ("y", Plus(Lit "x", Lit "y"))
-let plus1 = App (App (Lam ("x", innerBody), Const 2), Const 3)
-eval plus1
 
 // ----------------------------------------------
 // Ombra's interpreter - Lisp
@@ -145,6 +108,9 @@ let rec evalO env = function
 
 let cons = App (Lam ("x", Cons (Lit "x", Nil)), Const 42)
 evalO Map.empty cons
+
+let cons2 = App (Lam ("x", Cons (Lit "x", Cons (Lit "y", Cons (Lit "x", Nil)))), Const 42)
+evalO (Map.add "y" (Num 0) Map.empty) cons2
 
 let sum = App (Lam ("x", App (Lam ("y", Plus (Lit "x", Lit "y")), Const 41)), Const 1)
 evalO Map.empty sum
