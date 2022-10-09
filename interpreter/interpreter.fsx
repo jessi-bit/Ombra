@@ -59,19 +59,27 @@ let rec occursFree x N  =
         | Let (y, assignment, body) -> y <> x && occursFree x assignment && occursFree x body
         | _ -> false
 
-let rec idents = function
-    | Lit ident          -> [ident]
-    | Lam (ident, exp)   -> ident :: (idents exp)
-    | App (e, e')        -> (idents e) @ (idents e')
-    | Plus (e, e')       -> (idents e) @ (idents e')
-    | Cons (e, e')       -> (idents e) @ (idents e')
-    | If (e, e', e'')    -> (idents e) @ (idents e') @ (idents e'')
-    | Let (ident, e, e') -> ident :: (idents e) @ (idents e')
-    | _                  -> []
+
+let identsSet e = 
+    let rec idents e = 
+        match e with 
+            | Lit ident          -> [ident]
+            | Lam (ident, exp)   -> ident :: (idents exp)
+            | App (e, e')        -> (idents e) @ (idents e') 
+            | Plus (e, e')       -> (idents e) @ (idents e')
+            | Cons (e, e')       -> (idents e) @ (idents e')
+            | If (e, e', e'')    -> (idents e) @ (idents e') @ (idents e'')
+            | Let (ident, e, e') -> ident :: (idents e) @ (idents e')
+            | _                  -> []
+    idents e |> Set.ofList
+
+let vars = Seq.initInfinite (fun num -> "X" + string num)
+let filtered usedVarsSet = Seq.filter (fun var -> not (Set.contains var usedVarsSet)) vars |> Seq.cache
 
 //TODO
-let rec chooseIdent x y N e =
-    "?"
+let chooseIdent x y N e =
+    let varsSet = Set.union (identsSet N) (Set.union (identsSet e) (Set.add y (Set.add x Set.empty)))
+    Seq.item 0 (filtered varsSet) 
 
 let rec β M x N =
     match M with
