@@ -1,103 +1,58 @@
-## Linguaggio Ombra
+## Ombra
 
-Segue la formalizzazione in regole della semantica operazionale.
+Follows our operational semantics.
 
-### Espressione
+### Operational semantics
 
-```
-sexp  ::=  float | string | boolean | symbol | [sexp0 + .... + sexpn] | proc (env -> [sexp0 + .... + sexpn] -> sexp)
-```
+``` 
+------------ (e1)
+ρ |- f >> f
 
-### Regole
+------------ (e2)
+ρ |- b >> b
 
 
-1. 
-```
----------------------
-env |- float >> float
-```
-2.
-```
------------------------
-env |- string >> string
-```
+ρ(x) = v
+------------ (e3)
+ρ |- x >> v
 
-3.
-```
--------------------------
-env |- boolean >> boolean
-```
 
-4.
-```  
-env(symbol) = proc 
-----------------------
-env  |- symbol >> proc
-```
+--------------------------- (e4)
+ρ |- λx.y >> clos(x, y, ρ)
 
-5.
-```
-env |- sexp0 >> (arithmeticOp +)          env |- [sexp1, ... , sexpn] >> [float1 , .... , floatn]
--------------------------------------------------------------------------------------------------
-        env |-  [sexp0; sexp1; .... ; sexpn] >> [float1 + .... + floatn] 
-```
 
-6.
-```           
-env |- sexp0 >> (arithmeticOp *)           env |- [sexp1, ... , sexpn] >> [float1 , .... , floatn]   
---------------------------------------------------------------------------------------------------
-        env |-  [sexp0; sexp1; .... ; sexpn] >> [sexp1 * .... * sexpn] 
-```
+β(y, x, z) = e0      ρ |- e0 >> v
+---------------------------------- (e5)
+ρ |- (λx.y)z >> v
 
-7.
-```
-env |- sexp0 >> arithmeticOp -           env |- [sexp1, ... , sexpn] >> [float1 , .... , floatn]  
-------------------------------------------------------------------------------------------------
-        env |-  [sexp0; sexp1; .... ; sexpn] >> [sexp1 - .... - sexpn] 
-```
 
-8.
+ρ |- e1 >> true      ρ |- e2 >> v
+---------------------------------- (e6true)
+ρ |- if e1 then e2 else e3 >> v 
 
-```
-env |- sexp0 >> cons          env |- sexp1 >> v1                env |- sexp2 >> [s1; ... ; sn]
--------------------------------------------------------------------------------------------------
-        env |-  [sexp0; sexp1; sexp2] >> [v1; s1; ...; sn] 
-```
 
-9.
-```
-env |- sexp0 >> quote                           
--------------------------------
-env |-  [sexp0; sexp1] >> sexp1
-```
+ρ |- e1 >> false      ρ |- e3 >> v
+----------------------------------- (e6false)
+ρ |- if e1 then e2 else e3 >> v 
 
-10.
-```
-env |- sexp0 >> car          env |- sexp1 >> [s1; ...; sn]     env |- s1 >> v1                 
-------------------------------------------------------------------------------
-        env |-  [sexp0; sexp1] >> v1
-```
 
-11.
-```
-env |- sexp0 >> cdr         env |- sexp1 >> [s1; s2; .. ; sn]                  
--------------------------------------------------------------
-        env |-  [sexp0; sexp1] >> [s2; .. ; sn]
-```
-
-12.
-```
-env U [sexp1 = symbol1; .. ; sexpn = symboln]  |- [symbol11; .. ; symbol1n] >> v1
-env |- s3 >> [symbol11; .. ; symbol1n]
-env |- s2 >> [symbol1; .. ; symboln]
-env |- s1 >> lambda
-env |- sexp0 >> [s1; s2; s3]                           
--------------------------------------------------
-        env |-  [sexp0; sexp1; ... ; sexpn] >> v1
+ρ |- e0 >> v0     ρ[x -> v0] |- e1 >> v
+---------------------------------------- (e7)
+ρ |- let x = e0 in e1 >> v
 ```
 
 
+### Terminology :
 
+`ρ |- e >> v` means that within the environment `ρ`, evaluation of expression `e` produces the value `v` where `ρ = [x1 -> v1, ...., xn -> vn]` (the identifier `x1` has value `v1` .. the identifier `n` has value `n` within `env = ρ`).
 
+### Rules explanation
 
+1) Rule(e1) means that a float constant `f` evaluates to the float value `f`
+2) Rule(e2) means that a boolean constant `b` evaluates to the boolean value `b`
+3) Rule(e3) means that an identifier `x` evaluates to the value `ρ(x)` that it has in the current environment `ρ`
+4) Rule(e4) means that `λx.y` evaluates to the closure `clos(x, y, ρ)`
+5) Rule(e5) means that if the application of `z` to `λx.y` βreduces to the expression `e0` and `e0` evaluates to the value `v`, then that application evaluates to `v`
+6) Rule(e6true) and Rule(e6false) say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `v` as a result, `v` is the result of the if-then-else statement
+7) Rule(e7) means that if `e0` evaluates to `v0` and `e1` evaluates to `v` in the extended environment `ρ U {x -> v1}` then the let which binds the identifier `x` with `e0` in `e1` evaluates to `v`
 

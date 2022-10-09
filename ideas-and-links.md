@@ -1,8 +1,9 @@
 ## Ideas and links
 
-We are trying to follow the simplicity expressed in https://norvig.com/lispy.html
-
 ### Old idea
+
+We tried to follow the simplicity expressed in https://norvig.com/lispy.html, 
+then we got inspired by the lambda calculus.
 
 (This is not what we did in the end, I'll leave it here for a possible future extension)
 

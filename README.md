@@ -2,9 +2,7 @@
 
 ![Ombra](ombra.png)
 
-A Lisp made with :heart: by [JessiBit](https://github.com/jessi-bit) and [lazywithclass](https://github.com/lazywithclass)
-
-We used Scheme as an inspiration.
+A minimal functional language built on top of Lambda Calculus made with :heart: by [JessiBit](https://github.com/jessi-bit) and [lazywithclass](https://github.com/lazywithclass)
 
 [Operational semantics](operational-semantics).
 
@@ -16,7 +14,6 @@ TBD
 
 Implement the following 
 
- - [ ] functions as first class citizens?
  - [ ] typechecker
  - [ ] dependent types
  - [ ] monadic parser
