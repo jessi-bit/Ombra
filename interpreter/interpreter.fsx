@@ -8,7 +8,6 @@ module Ombra.Interpreter
 // * our interpreter is not defensive
 
 type ident = string
-type index = int
 
 type exp =
     | Lit   of ident
@@ -72,10 +71,9 @@ let identsSet e =
             | _                  -> []
     idents e |> Set.ofList
 
-let vars = Seq.initInfinite (fun num -> "X" + string num)
-let filtered usedVarsSet = Seq.filter (fun var -> not (Set.contains var usedVarsSet)) vars |> Seq.cache
-//TODO
 let chooseIdent x y N e =
+    let vars = Seq.initInfinite (fun num -> "X" + string num)
+    let filtered usedVarsSet = Seq.filter (fun var -> not (Set.contains var usedVarsSet)) vars |> Seq.cache
     let varsSet = Set.union (identsSet N) (Set.union (identsSet e) (Set.add y (Set.add x Set.empty)))
     Seq.item 0 (filtered varsSet) 
 
