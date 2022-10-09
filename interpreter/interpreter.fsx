@@ -59,7 +59,6 @@ let rec occursFree x N  =
         | Let (y, assignment, body) -> y <> x && occursFree x assignment && occursFree x body
         | _ -> false
 
-
 let identsSet e = 
     let rec idents e = 
         match e with 
@@ -75,7 +74,6 @@ let identsSet e =
 
 let vars = Seq.initInfinite (fun num -> "X" + string num)
 let filtered usedVarsSet = Seq.filter (fun var -> not (Set.contains var usedVarsSet)) vars |> Seq.cache
-
 //TODO
 let chooseIdent x y N e =
     let varsSet = Set.union (identsSet N) (Set.union (identsSet e) (Set.add y (Set.add x Set.empty)))

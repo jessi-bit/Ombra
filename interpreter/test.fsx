@@ -87,8 +87,17 @@ expect "let jessibit" (fun () ->
 
 expect "idents" (fun () ->
                   let app = App (Lam ("x", Plus (Lit "x", Lit "y")), Const 2)
-                  idents app
-                 ) ["x"; "x"; "y"]
+                  identsSet app
+                 ) (Set.ofList ["x"; "y"])
+
+expect "choose ident" (fun () ->
+                        let app = App (Lam ("X0", Plus (Lit "X1", Lit "y")), Const 2)
+                        chooseIdent "X4" "Y1" app (Lit "x")
+                        ) "X2"
+
+expect "beta reduce choose ident" (fun () ->
+                                    let app = Lam ("x", (Lam ("z", Lit "y"))) 
+                                    β app "y" (Lit "x")) (Lam ("X0", Lam ("z", Lit "x")))
 
 // defun and operations abstractions are missing
 
