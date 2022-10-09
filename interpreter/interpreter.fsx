@@ -58,7 +58,17 @@ let rec occursFree x N  =
             occursFree x cond || occursFree x ifBranch || occursFree x elseBranch
         | Let (y, assignment, body) -> y <> x && occursFree x assignment && occursFree x body
         | _ -> false
-  
+
+let rec idents = function
+    | Lit ident          -> [ident]
+    | Lam (ident, exp)   -> ident :: (idents exp)
+    | App (e, e')        -> (idents e) @ (idents e')
+    | Plus (e, e')       -> (idents e) @ (idents e')
+    | Cons (e, e')       -> (idents e) @ (idents e')
+    | If (e, e', e'')    -> (idents e) @ (idents e') @ (idents e'')
+    | Let (ident, e, e') -> ident :: (idents e) @ (idents e')
+    | _                  -> []
+
 //TODO
 let rec chooseIdent x y N e =
     "?"

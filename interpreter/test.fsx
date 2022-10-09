@@ -85,6 +85,11 @@ expect "let jessibit" (fun () ->
                         let l = Let ("x", app, App (Lam ("y", Lit "y"), Lit "x"))
                         evalO Map.empty l) (Num 7)
 
+expect "idents" (fun () ->
+                  let app = App (Lam ("x", Plus (Lit "x", Lit "y")), Const 2)
+                  idents app
+                 ) ["x"; "x"; "y"]
+
 // defun and operations abstractions are missing
 
 // (+ 1 41)
