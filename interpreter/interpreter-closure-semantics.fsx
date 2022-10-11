@@ -1,11 +1,7 @@
 module Ombra.Interpreter
 
 // ----------------------------------------------
-// Ombra's interpreter - Lambda Calculus kernel
-
-// notes for us, we will remove this before publishing:
-// * our implementation is lazy
-// * our interpreter is not defensive
+// Ombra's interpreter - Lambda Calculus semantics
 
 type ident = string
 
@@ -14,14 +10,9 @@ type exp =
     | Lam   of (ident * exp)
     | App   of (exp * exp)
     // --- outside Lambda Calculus
-    | Const of float
     | Bool  of bool
-    | Plus  of (exp * exp)
-    | Nil
-    | Cons  of (exp * exp)
     | If    of (exp * exp * exp)
-    | Let   of (ident * exp * exp)
-    
+
 // alpha-conversion and beta-reduction are explained here
 // https://pages.cs.wisc.edu/~horwitz/CS704-NOTES/1.LAMBDA-CALCULUS.html#beta
 
