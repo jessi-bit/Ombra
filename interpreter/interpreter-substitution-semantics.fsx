@@ -68,13 +68,16 @@ let rec β M x N =
         | Lam (v, e)                      -> Lam (v, β e x N)
         | App (e, e')                     -> App ((β e x N), (β e' x N))
         // --- outside Lambda Calculus
-        | If (cond, ifBranch, elseBranch) -> If ((β cond x N), (β ifBranch x N), (β elseBranch x N))
+        | If (condE, ifE, elseE)          -> If ((β condE x N), (β ifE x N), (β elseE x N))
         | _ -> M
 
 let rec eval = function
-    | App (lam, arg) -> let argE = eval arg
-                        match (eval lam) with
-                            | Lam (var, body) -> eval (β body var argE)
+    | App (lam, argE)        -> let arg = eval argE
+                                match (eval lam) with
+                                    | Lam (var, body) -> eval (β body var arg)
+    | If (condE, ifE, elseE) -> match eval condE with
+                                    | Bool true -> ifE
+                                    | _         -> elseE
     | e -> e
 
 // -------------------------------------------------------------
