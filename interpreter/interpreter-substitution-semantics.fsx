@@ -1,17 +1,9 @@
 module Ombra.Interpreter.Substitution
 
+open Ombra.Interpreter.Types
+
 // -------------------------------------------------------------
 // Ombra's interpreter - Lambda Calculus substitution semantics
-
-type ident = string
-
-type exp =
-    | Lit   of ident
-    | Lam   of (ident * exp)
-    | App   of (exp * exp)
-    // --- outside Lambda Calculus
-    | Bool  of bool
-    | If    of (exp * exp * exp)
 
 // alpha-conversion and beta-reduction are explained here
 // https://pages.cs.wisc.edu/~horwitz/CS704-NOTES/1.LAMBDA-CALCULUS.html#beta
@@ -71,11 +63,11 @@ let rec β M x N =
         | If (condE, ifE, elseE)          -> If ((β condE x N), (β ifE x N), (β elseE x N))
         | _ -> M
 
-let rec eval = function
-    | App (lam, argE)        -> let arg = eval argE
-                                match (eval lam) with
-                                    | Lam (var, body) -> eval (β body var arg)
-    | If (condE, ifE, elseE) -> match eval condE with
+let rec evalS = function
+    | App (lam, argE)        -> let arg = evalS argE
+                                match (evalS lam) with
+                                    | Lam (var, body) -> evalS (β body var arg)
+    | If (condE, ifE, elseE) -> match evalS condE with
                                     | Bool true -> ifE
                                     | _         -> elseE
     | e -> e
@@ -87,4 +79,4 @@ let rec eval = function
 let cond  = App (Lam ("x", Bool false), Bool true)
 let ifE   = Bool true
 let elseE = Bool false
-eval (If (cond, ifE, elseE)) // false
+evalS (If (cond, ifE, elseE)) // false
