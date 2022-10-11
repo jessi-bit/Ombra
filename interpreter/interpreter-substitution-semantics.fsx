@@ -87,4 +87,4 @@ let rec eval = function
 let cond  = App (Lam ("x", Bool false), Bool true)
 let ifE   = Bool true
 let elseE = Bool false
-eval (If (cond, ifE, elseE))
+eval (If (cond, ifE, elseE)) // false
