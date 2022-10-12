@@ -25,7 +25,6 @@ let rec evalC env e =
             match evalC env condE with
                 | Boo true -> evalC env ifE
                 | _        -> evalC env elseE
-        | _ -> failwith (sprintf "%A\n" e)
 
 // -------------------------------------------------------------
 // Ombra's interpreter - Tests

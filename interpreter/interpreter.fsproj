@@ -13,8 +13,4 @@
     <Compile Include="interpreters-verification-of-equality.fsx" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FsCheck" Version="2.16.5" />
-  </ItemGroup>
-
 </Project>
