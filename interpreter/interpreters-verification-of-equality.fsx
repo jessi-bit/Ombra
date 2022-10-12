@@ -34,6 +34,8 @@ let rec tc = function
                              | _      -> false
     | _               -> true
 
+// NOTA PER JESSICA:
+// Questo riempie l'env in base a come e' stato generato l'AST da FsCheck
 let rec fillEnv env bound = function
     | Lit l -> if not (List.contains l bound) then Map.add l (Boo true) env
                else env
@@ -47,11 +49,15 @@ let rec fillEnv env bound = function
                          fillEnv env'' bound e''
     | _ -> env
 
+// NOTA PER JESSICA:
+// Una versione rudimentale di quello che poi dovremo fare
 let rec equalityCheck e e' =
     match (e, e') with
         | (Bool b, Boo b') when b = b' -> true
         | _ -> false
 
+// NOTA PER JESSICA:
+// Questi sono alcuni degli stack trace che ho visto
 // sometimes crashes in Stack overflow, I dont know why
 // Examples:
 // 1)
