@@ -82,3 +82,16 @@ let cases = Gen.sized generateExp
                 equalityCheck evaledS evaled'
 
 Check.Quick cases
+
+
+
+let ast = App (Lam ("y", (Lam ("x", Lit "y"))), Lit "x")
+evalS ast
+evalC (Map.add "x" (Boo true) Map.empty) ast
+
+
+// EVAL SUBSTITUTION
+// Lam ("X0", Lit "x")
+
+// EVAL CLOSURES
+// Clos ("x", Lit "y", map [("x", Boo true); ("y", Boo true)])
