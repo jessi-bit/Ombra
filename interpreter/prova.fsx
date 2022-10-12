@@ -41,11 +41,11 @@ type ArbitraryExp =
     static member NotTooBig() =
         Arb.from<exp> |> Arb.filter (fun sample -> sizeOf sample < 2)
 
-// Arb.register<ArbitraryExp>()
-// let ``ziocaro`` (NotTooBig a) =
-//     printf "%A\n" a
-//     true
-// Check.Quick ``ziocaro``
+Arb.register<ArbitraryExp>()
+let ``ziocaro`` (NotTooBig a) =
+    printf "%A\n" a
+    true
+Check.Quick ``ziocaro``
 
 // let a = Arb.from<exp> |> Arb.filter (fun sample -> sizeOf sample < 2 && tc sample)
 // printf "%A\n"a

@@ -1,22 +1,15 @@
+module Ombra.Interpreter.Verification
+
 #nowarn "25"
 
-#r "./FsCheck.dll"
+#r "FsCheck"
 open FsCheck
-#load "interpreter-types.fsx"
+#load "interpreter-types.fs"
 open Ombra.Interpreter.Types
 #load "interpreter-closures-semantics.fsx"
 open Ombra.Interpreter.Closures
 #load "interpreter-substitution-semantics.fsx"
 open Ombra.Interpreter.Substitution
-
-// let cond  = App (Lam ("x", Bool false), Bool true)
-// let ifE   = Bool true
-// let elseE = Bool false
-// printf "%A\n" (evalC Map.empty (If (cond, ifE, elseE))) // false
-// printf "%A\n" (evalS (If (cond, ifE, elseE))) // false
-
-// let astGenerator = Arb.generate<exp>
-// printf "%A\n" (Gen.sample 5 5 astGenerator)
 
 // typechecker
 let rec tc = function
@@ -34,8 +27,6 @@ let rec tc = function
                              | _      -> false
     | _               -> true
 
-// NOTA PER JESSICA:
-// Questo riempie l'env in base a come e' stato generato l'AST da FsCheck
 let rec fillEnv env bound = function
     | Lit l -> if not (List.contains l bound) then Map.add l (Boo true) env
                else env
@@ -49,42 +40,35 @@ let rec fillEnv env bound = function
                          fillEnv env'' bound e''
     | _ -> env
 
-// NOTA PER JESSICA:
-// Una versione rudimentale di quello che poi dovremo fare
+let rec generateExp size =
+    match size with
+        | 0 -> Gen.oneof [
+            Gen.map Lit Arb.generate<ident>
+            Gen.map Bool Arb.generate<bool>]
+        | n when n > 0 ->
+            Gen.oneof [
+                Gen.map Lit Arb.generate<ident>
+                Gen.map Bool Arb.generate<bool>
+                Gen.map2 (fun i e -> Lam (i, e)) (Gen.map (fun i -> i) Arb.generate<ident>) (generateExp (size - 1))
+                Gen.map2 (fun e e' -> App (e, e')) (generateExp (size - 1)) (generateExp (size - 1))
+                Gen.map3 (fun e e' e'' -> If (e, e', e'')) (generateExp (size - 1)) (generateExp (size - 1)) (generateExp (size - 1))]
+
+// let sized = Gen.sized generateExp
+// let samples = Gen.sample 4 4 sized
+
+// TODO expand with other cases
 let rec equalityCheck e e' =
     match (e, e') with
         | (Bool b, Boo b') when b = b' -> true
         | _ -> false
 
-// NOTA PER JESSICA:
-// Questi sono alcuni degli stack trace che ho visto
-// sometimes crashes in Stack overflow, I dont know why
-// Examples:
-// 1)
-// Stack overflow.
-// at FsCheck.Random.stdNext(StdGen)
-// at FsCheck.Random.f@69-1(Int32, Int32, StdGen)
-// at FsCheck.Random.stdRange(Int32, Int32, StdGen)
-// at FsCheck.Gen+Choose@178.Invoke(Int32, StdGen)
-// 2)
-// Stack overflow.
-// at FsCheck.Random.stdRange(Int32, Int32, StdGen)
-// at FsCheck.Gen+Choose@178.Invoke(Int32, StdGen)
-// 3)
-// Given Bool false
-// Bool false Boo false
-// 0:
-// Bool false
-// Given Lit "YO"
-// Bool true Boo true
-// 1:
-// Lit "YO"
-// Stack overflow.
-//    at Microsoft.FSharp...
-let cases = Arb.generate<exp>
+// TODO filter using tc when generating, not after generation
+let cases = Gen.sized generateExp
             |> Gen.filter tc
             |> Arb.fromGen
             |> Prop.forAll <| fun (ast) ->
+                printf "DOING %A\n" ast
+
                 let evaled = evalS ast
                 let evaled' = evalC (fillEnv Map.empty List.empty ast) ast
 
@@ -95,7 +79,6 @@ let cases = Arb.generate<exp>
                                   | Lit _ -> Bool true
                                   | _ -> evaled
 
-                printf "Given %A \n%A %A\n" ast evaledS evaled'
                 equalityCheck evaledS evaled'
 
-Check.Verbose cases
+Check.Quick cases

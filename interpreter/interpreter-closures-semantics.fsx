@@ -14,13 +14,13 @@ and env = Map<ident,value>
 let rec evalC env e =
     match e with
         | Lit l                  -> Map.find l env
+        | Bool b                 -> Boo b
         | Lam (ident, body)      -> Clos (ident, body, env)
         | App (bodyE, argE)      ->
             let arg = evalC env argE
             match evalC env bodyE with
                 | Clos (ident, body, env) -> let env' = Map.add ident arg env
                                              evalC env' body
-        | Bool b                 -> Boo b
         | If (condE, ifE, elseE) ->
             match evalC env condE with
                 | Boo true -> evalC env ifE
