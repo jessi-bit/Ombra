@@ -7,7 +7,14 @@
 
   <ItemGroup>
     <!-- never use *.fs -->
-    <Compile Include="interpreter.fsx" />
+    <Compile Include="interpreter-types.fs" />
+    <Compile Include="interpreter-closures-semantics.fsx" />
+    <Compile Include="interpreter-substitution-semantics.fsx" />
+    <Compile Include="interpreters-verification-of-equality.fsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="2.16.5" />
   </ItemGroup>
 
 </Project>
