@@ -1,0 +1,3 @@
+Regola e5: se e1 valuta in qualcosa che non e' lambda non dovrebbe essere soltanto
+una App? In quanto non ha senso fare ad esempio App(Bool true, Bool true), oppure
+App (If then else, Bool true), oppure App(Lit x, Bool true).

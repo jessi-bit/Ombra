@@ -6,10 +6,10 @@ open Ombra.Interpreter.Types
 // Ombra's interpreter - Closures semantics
 
 // after eval
-type value =
+type valueC =
     | Clos of (ident * exp * env)
     | Boo  of bool
-and env = Map<ident,value>
+and env = Map<ident,valueC>
 
 let rec evalC env e =
     match e with
