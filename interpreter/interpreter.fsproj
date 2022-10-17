@@ -11,6 +11,7 @@
     <Compile Include="interpreter-closures-semantics.fsx" />
     <Compile Include="interpreter-substitution-semantics.fsx" />
     <Compile Include="interpreters-verification-of-equality.fsx" />
+    <Compile Include="ski.fsx" />
   </ItemGroup>
 
   <ItemGroup>

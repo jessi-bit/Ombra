@@ -18,7 +18,7 @@ e0: a boolean `b` evaluates to the boolean value `b`
 e1: an identifier `x` evaluates to the value `env(x)` that it has in the current environment `env`
 e2: `λx.e` evaluates to the closure `clos(x, e, env)`
 e3: e3true and e3false say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `v` as a result, `v` is the result of the if-then-else statement.
-e4: the Application of `e1` to (λx.e) evaluates to the value `v` if
+e4: the Application of (λx.e) to `e1` evaluates to the value `v` if
 `e1` evaluates to `v0` in env and `e` evaluates to `v` in env U {x : v0}.
 
 ```
@@ -56,7 +56,7 @@ e1: a literal variable `x` evaluates to the literal variable `x`
 e2: `λx.e` evaluates to `λx.e`
 e3: Rule(e3true) and Rule(e3false) say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `e'` as a result, `e'` is the result of the if-then-else statement.
 e4: if `e1` is a lambda and substituting all free occurrencies of 
-`x` in `e` with `e2` yields `e'`, the application of `e2` to `e1` 
+`x` in `e` with `e2` yields `e'`, the application of `e1` to `e2` 
 evaluates to `e'`.
 
 ```
