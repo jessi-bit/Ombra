@@ -4,9 +4,12 @@ Follows our operational semantics.
 
 ### Operational semantics
 
+#### Closures
+
+
+#### Substitutions
+
 ``` 
------------- (e1)
-ρ |- f >> f
 
 ------------ (e2)
 ρ |- b >> b
@@ -15,7 +18,6 @@ Follows our operational semantics.
 ρ(x) = v
 ------------ (e3)
 ρ |- x >> v
-
 
 --------------------------- (e4)
 ρ |- λx.y >> clos(x, y, ρ)
@@ -40,7 +42,6 @@ Follows our operational semantics.
 ---------------------------------------- (e7)
 ρ |- let x = e0 in e1 >> v
 ```
-
 
 ### Terminology :
 

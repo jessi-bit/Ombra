@@ -84,7 +84,6 @@ let cases = Gen.sized generateExp
 Check.Quick cases
 
 
-
 let ast = App (Lam ("y", (Lam ("x", Lit "y"))), Lit "x")
 evalS ast
 evalC (Map.add "x" (Boo true) Map.empty) ast
