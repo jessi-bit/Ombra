@@ -55,20 +55,8 @@ areThereFreeVars (Lam ("x", App (Lam ("x", Lit "y"), Bool true))) //true
 areThereFreeVars (App (Lam ("x", If (Lit "x", Lit "y", Bool false)), Bool true)) //true
 areThereFreeVars (App (Lam ("x", If (Lit "x", Bool true, Bool false)), Bool true)) //false
 
-let rec badExp = function
-    | Lit ""          -> false
-    | Lit null        -> false
-    | Lam ("", _)     -> false
-    | Lam (null, _)   -> false
-    | Lam (_, e)      -> badExp e
-    | App (e, e')     -> match e with
-                             | Lam _ -> badExp e && badExp e'
-                             | _     -> false
-    | If (e, e', e'') -> match e with
-                             | App _  -> badExp e && badExp e' && badExp e''
-                             | Bool _ -> badExp e' && badExp e''
-                             | _      -> false
-    | _               -> true
+let goodId (Lit id) =
+    not (System.String.IsNullOrEmpty id) 
 
 let rec fillEnv env bound = function
     | Lit l -> if not (List.contains l bound) then Map.add l (Boo true) env
@@ -86,11 +74,11 @@ let rec fillEnv env bound = function
 let rec generateExp size =
     match size with
         | 0 -> Gen.oneof [
-            Gen.map Lit Arb.generate<ident>
+            Gen.map Lit Arb.generate<ident> |> Gen.filter goodId
             Gen.map Bool Arb.generate<bool>]
         | n when n > 0 ->
             Gen.frequency [ 
-                (1, Gen.map Lit Arb.generate<ident>); 
+                (1, Gen.map Lit Arb.generate<ident> |> Gen.filter goodId); 
                 (1, Gen.map Bool Arb.generate<bool>);
                 (4, Gen.map2 (fun i e -> Lam (i, e)) (Gen.map id Arb.generate<ident>) (generateExp (size - 1)));
                 (4, Gen.map2 (fun e e' -> App (e, e')) (generateExp (size - 1)) (generateExp (size - 1)));
@@ -112,7 +100,7 @@ let res2 = evalC Map.empty lam
 verifyequality res2 res1 Map.empty
 
 let propVal = Gen.sized generateExp
-            |> Gen.filter badExp
+            |> Gen.filter (fun exp -> tpCheck Map.empty exp <> None) 
             |> Gen.filter (fun exp -> not (areThereFreeVars exp))
             //|> Gen.filter (fun exp -> tpCheck Map.empty exp <> None)
             |> Arb.fromGen
@@ -123,5 +111,8 @@ let propVal = Gen.sized generateExp
                 printf "AST was  %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
                 verifyequality resC resS envC
 
-do Check.Quick propVal
+
+let config = {Config.Quick with MaxTest = 500}
+do Check.One(config,propVal)
+
 
