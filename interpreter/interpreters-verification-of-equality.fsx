@@ -11,21 +11,44 @@ open Ombra.Interpreter.Closures
 #load "interpreter-substitution-semantics.fsx"
 open Ombra.Interpreter.Substitution
 
-// "typechecker"
-let rec tc = function
+let rec tpCheck tEnv = function
+    | Lit x -> Map.tryFind x tEnv
+    | Bool _ -> Some BOOL
+    | If (e1,e2,e3) ->
+        match (tpCheck tEnv e1, tpCheck tEnv e2, tpCheck tEnv e3) with
+            | Some BOOL, Some t1, Some t2 when t1 = t2 -> Some t1
+            | _ -> None
+    | App (e1, e2) ->
+        match (tpCheck tEnv e1, tpCheck tEnv e2) with
+            | Some (FUN (t1, t2)), Some t3 when t3 = t1 -> Some t2
+            | _ -> None
+    | Lam (id, body) -> 
+        match (Map.tryFind id tEnv, tpCheck tEnv body) with
+            | Some t1, Some t2 -> FUN (t1, t2) |> Some
+            | _ -> None
+    
+let lambda = Lam ("x", If (Lit "x", Bool true, Bool false))   
+tpCheck (Map.add "x" BOOL Map.empty) lambda
+
+let app = App (lambda, Bool true)
+tpCheck (Map.add "x" BOOL Map.empty) app 
+
+//filter of expressions having no meaning
+let rec filterBad = function
     | Lit ""          -> false
     | Lit null        -> false
     | Lam ("", _)     -> false
     | Lam (null, _)   -> false
-    | Lam (_, e)      -> tc e
+    | Lam (_, e)      -> filterBad e
     | App (e, e')     -> match e with
-                             | Lam _ -> tc e && tc e'
+                             | Lam _ -> filterBad e && filterBad e'
                              | _     -> false
     | If (e, e', e'') -> match e with
-                             | App _  -> tc e && tc e' && tc e''
-                             | Bool _ -> tc e' && tc e''
+                             | App _  -> filterBad e && filterBad e' && filterBad e''
+                             | Bool _ -> filterBad e' && filterBad e''
                              | _      -> false
     | _               -> true
+
 
 let rec fillEnv env bound = function
     | Lit l -> if not (List.contains l bound) then Map.add l (Boo true) env
@@ -54,7 +77,7 @@ let rec generateExp size =
                 Gen.map3 (fun e e' e'' -> If (e, e', e'')) (generateExp (size - 1)) (generateExp (size - 1)) (generateExp (size - 1))]
 
 let cases = Gen.sized generateExp
-            |> Gen.filter tc
+            |> Gen.filter filterBad
             |> Arb.fromGen
             |> Prop.forAll <| fun (ast) ->
                 let resS = evalS ast

@@ -14,6 +14,8 @@ M,N,O ::= x | (M N) | λx.M | If (M, N, O)
 
 #### Closures
 
+The judgement  env |- e >> v means that the expression e has value v within the environment env.
+
 e0: a boolean `b` evaluates to the boolean value `b`
 e1: an identifier `x` evaluates to the value `env(x)` that it has in the current environment `env`
 e2: `λx.e` evaluates to the closure `clos(x, e, env)`
@@ -51,6 +53,8 @@ env |-  (λx.e)e1 >> v
 
 #### Substitutions
 
+The judgement  e >> e1 means that the expression e evaluates to e1. 
+
 e0: a boolean `b` evaluates to the boolean `b`
 e1: a literal variable `x` evaluates to the literal variable `x`
 e2: `λx.e` evaluates to `λx.e`
@@ -82,12 +86,44 @@ if e1 then e2 else e3 >> e'
 e1 >> λx.e     e[e2/x] >> e'
 ----------------------------- (e4)
 (e1 e2) >> e'
-
-e1 >> e1' = (e3, e4)        
-------------------------------- (e5)
-(e1 e2) >> (e1' e2)
 ```
 
-### Terminology
+### Type rules
 
-`ρ |- e >> v` means that within the environment `ρ`, evaluation of expression `e` produces the value `v` where `ρ = [x1 -> v1, ...., xn -> vn]` (the identifier `x1` has value `v1` .. the identifier `n` has value `n` within `env = ρ`).
+The type judgment tEnv |- e : t asserts that in type environment tEnv, the expression e has type t.
+
+```
+
+t ∈ ty ::= BOOL | FUN (t, t)  (type)
+
+tEnv |- x : t                 (tEnv)
+
+
+------------------ (e0)
+tEnv |- b : BOOL
+
+
+tEnv(x) = t
+-------------  (e1)
+tEnv |- x : t
+
+
+tEnv  |- e1 : BOOL    tEnv  |- e2 : t    tEnv  |- e3 : t 
+----------------------------------------------------------  (e2)
+tEnv |- if e1 then e2 else e3 : t
+
+
+
+tEnv(x) = t1   tEnv  |- e : t2  
+----------------------------------------------------------  (e3)
+tEnv |- (λx.e) : FUN (t1, t2)
+
+
+tEnv  |- e1 : FUN (t1, t2)   tEnv  |- e2 : t1   
+----------------------------------------------------------  (e4)
+tEnv |- (e1 e2) : t2
+
+
+
+
+```
