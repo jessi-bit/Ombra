@@ -23,7 +23,8 @@ let rec tpCheck tEnv = function
         match (tpCheck tEnv e1, tpCheck tEnv e2) with
             | Some (FUN (t1, t2)), Some t3 when t3 = t1 -> Some t2
             | _ -> None
-    | Lam (id, body) -> 
+    | Lam (id, body) ->
+        // TODO Map.add
         match (Map.tryFind id tEnv, tpCheck tEnv body) with
             | Some t1, Some t2 -> FUN (t1, t2) |> Some
             | _ -> None
@@ -70,6 +71,13 @@ let rec fillEnv env bound = function
                          fillEnv env'' bound e''
     | _ -> env
 
+// TODO size / 2?
+// TODO generate a different var each time for lambda, use a global variable
+// base case: bind between the range of var
+// TODO generate using types
+//
+// Go back to recursive generator, generate well typed expressions
+// use lambda with types annotations
 let rec generateExp size =
     // TODO remove
     if size > 5 then (Gen.map Bool Arb.generate<bool>)

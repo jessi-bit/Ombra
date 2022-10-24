@@ -11,6 +11,7 @@ type valueC =
     | Boo  of bool
 and env = Map<ident,valueC>
 
+// TODO DONT eval argE
 let rec evalC env e =
     match e with
         | Lit l                  -> Map.find l env
