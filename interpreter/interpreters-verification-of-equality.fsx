@@ -11,7 +11,7 @@ open Ombra.Interpreter.Closures
 #load "interpreter-substitution-semantics.fsx"
 open Ombra.Interpreter.Substitution
 
-//TypeChecker -----------------------------------------------------------------
+// TypeChecker -----------------------------------------------------------------
 let rec tpCheck tEnv = function
     | Lit x -> Map.tryFind x tEnv
     | Bool _ -> Some BOOL
@@ -27,14 +27,18 @@ let rec tpCheck tEnv = function
         match (Map.tryFind id tEnv, tpCheck tEnv body) with
             | Some t1, Some t2 -> FUN (t1, t2) |> Some
             | _ -> None
+
+let rec fillTpckEnv env = function
+    | Lit l           -> Map.add l BOOL env
+    | Lam (l, exp)    -> fillTpckEnv (Map.add l BOOL env) exp
+    | App (e, e')     -> let env' = fillTpckEnv env e'
+                         fillTpckEnv env' e'
+    | If (e, e', e'') -> let env' = fillTpckEnv env e
+                         let env'' = fillTpckEnv env' e'
+                         fillTpckEnv env'' e''
+    | _ -> env
     
-let lambda = Lam ("x", If (Lit "x", Bool true, Bool false))   
-tpCheck (Map.add "x" BOOL Map.empty) lambda
-
-let app = App (lambda, Bool true)
-tpCheck (Map.add "x" BOOL Map.empty) app 
-
-//Generator of closed terms -----------------------------------------------------
+// Generator of closed terms -----------------------------------------------------
 let areThereFreeVars exp =
     let rec loop exp varsSet =
         match exp with 
@@ -49,13 +53,7 @@ let areThereFreeVars exp =
 
     loop exp (Set.empty)
 
-areThereFreeVars (Lit "x") 
-areThereFreeVars (Lam ("x", App (Lam ("x", Bool true), Bool false))) //false
-areThereFreeVars (Lam ("x", App (Lam ("x", Lit "y"), Bool true))) //true
-areThereFreeVars (App (Lam ("x", If (Lit "x", Lit "y", Bool false)), Bool true)) //true
-areThereFreeVars (App (Lam ("x", If (Lit "x", Bool true, Bool false)), Bool true)) //false
-
-let goodId (Lit id) =
+let goodId id =
     not (System.String.IsNullOrEmpty id) 
 
 let rec fillEnv env bound = function
@@ -72,19 +70,22 @@ let rec fillEnv env bound = function
     | _ -> env
 
 let rec generateExp size =
+    if size > 5 then (Gen.map Bool Arb.generate<bool>)
+    else
+    let a = Gen.map id Arb.generate<ident>
     match size with
         | 0 -> Gen.oneof [
-            Gen.map Lit Arb.generate<ident> |> Gen.filter goodId
+            Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId)
             Gen.map Bool Arb.generate<bool>]
         | n when n > 0 ->
             Gen.frequency [ 
-                (1, Gen.map Lit Arb.generate<ident> |> Gen.filter goodId); 
+                (1, Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId));
                 (1, Gen.map Bool Arb.generate<bool>);
-                (4, Gen.map2 (fun i e -> Lam (i, e)) (Gen.map id Arb.generate<ident>) (generateExp (size - 1)));
+                (4, Gen.map2 (fun i e -> Lam (i, e)) (Gen.map id Arb.generate<ident> |> Gen.filter goodId ) (generateExp (size - 1)));
                 (4, Gen.map2 (fun e e' -> App (e, e')) (generateExp (size - 1)) (generateExp (size - 1)));
                 (4,  Gen.map3 (fun e e' e'' -> If (e, e', e'')) (generateExp (size - 1)) (generateExp (size - 1)) (generateExp (size - 1)))
                 ]
-            
+
 let rec verifyequality valueC valueS envC =
     match (valueC, valueS) with
         | Boo b1, BoolS b2 -> b1 = b2
@@ -93,14 +94,12 @@ let rec verifyequality valueC valueS envC =
             let e2' = evalS e2
             id1 = id2 && (verifyequality e1' e2' envC)
  
-let lam = App (Lam ("x", Lit "x"), (App (Lam ("x", Lit "x"), Bool true)))
-let res1 = evalS lam
-let res2 = evalC Map.empty lam
-
-verifyequality res2 res1 Map.empty
-
 let propVal = Gen.sized generateExp
-            |> Gen.filter (fun exp -> tpCheck Map.empty exp <> None) 
+            |> Gen.filter (fun exp ->
+                           match tpCheck (fillTpckEnv Map.empty exp) exp with
+                               | Some _ -> true
+                               | _ -> printf "\nFAILED\n%A\n\n" exp
+                                      false)
             |> Gen.filter (fun exp -> not (areThereFreeVars exp))
             //|> Gen.filter (fun exp -> tpCheck Map.empty exp <> None)
             |> Arb.fromGen
@@ -108,11 +107,7 @@ let propVal = Gen.sized generateExp
                 let envC = fillEnv Map.empty List.empty ast
                 let resS = evalS ast
                 let resC = evalC envC ast
-                printf "AST was  %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
+                printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
                 verifyequality resC resS envC
 
-
-let config = {Config.Quick with MaxTest = 500}
-do Check.One(config,propVal)
-
-
+do Check.Quick propVal
