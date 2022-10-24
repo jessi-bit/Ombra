@@ -1,5 +1,6 @@
 module Ombra.Interpreter.Closures
 
+#load "interpreter-types.fs"
 open Ombra.Interpreter.Types
 
 // -----------------------------------------
@@ -9,19 +10,19 @@ open Ombra.Interpreter.Types
 type valueC =
     | Clos of (ident * exp * env)
     | Boo  of bool
-and env = Map<ident,valueC>
+and env = Map<ident,exp>
 
 // TODO DONT eval argE
 let rec evalC env e =
     match e with
-        | Lit l                  -> Map.find l env
+        | Lit l                  -> evalC env (Map.find l env)
         | Bool b                 -> Boo b
-        | Lam (ident, body)      -> Clos (ident, body, env)
+        | Lam (ident, _, body) -> Clos (ident, body, env)
         | App (bodyE, argE)      ->
-            let arg = evalC env argE
-            match evalC env bodyE with
-                | Clos (ident, body, env) -> let env' = Map.add ident arg env
-                                             evalC env' body
+            match (evalC env bodyE) with
+                | Clos (ident, body, env) -> 
+                    let env' = Map.add ident argE env
+                    evalC env' body
         | If (condE, ifE, elseE) ->
             match evalC env condE with
                 | Boo true -> evalC env ifE
@@ -31,7 +32,11 @@ let rec evalC env e =
 // Ombra's interpreter - Tests
 
 // K combinator that returns false
-let cond  = App (Lam ("x", Bool false), Bool true)
+let cond  = App (Lam ("x", BOOL, Bool false), Bool true)
 let ifE   = Bool true
 let elseE = Bool false
 evalC Map.empty (If (cond, ifE, elseE)) // false
+let lam = Lam ("x", BOOL, Lit "x")
+evalC Map.empty lam
+let app = App (Lam ("x", BOOL, Lit "x"), (If (cond, ifE, elseE)))
+evalC Map.empty app

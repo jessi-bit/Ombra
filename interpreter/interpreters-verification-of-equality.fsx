@@ -21,55 +21,20 @@ let rec tpCheck tEnv = function
             | _ -> None
     | App (e1, e2) ->
         match (tpCheck tEnv e1, tpCheck tEnv e2) with
-            | Some (FUN (t1, t2)), Some t3 when t3 = t1 -> Some t2
+            | Some (FUN (t1, t2)), Some t3 when t3 = t1 -> Some t2   
             | _ -> None
-    | Lam (id, body) ->
-        // TODO Map.add
-        match (Map.tryFind id tEnv, tpCheck tEnv body) with
-            | Some t1, Some t2 -> FUN (t1, t2) |> Some
+    | Lam (id, tp, body) ->
+        let env' = Map.add id tp tEnv
+        match (tpCheck env' body) with
+            | Some t2 -> 
+                FUN (tp, t2) |> Some
             | _ -> None
-
-let rec fillTpckEnv env = function
-    | Lit l           -> Map.add l BOOL env
-    | Lam (l, exp)    -> fillTpckEnv (Map.add l BOOL env) exp
-    | App (e, e')     -> let env' = fillTpckEnv env e
-                         fillTpckEnv env' e'
-    | If (e, e', e'') -> let env' = fillTpckEnv env e
-                         let env'' = fillTpckEnv env' e'
-                         fillTpckEnv env'' e''
-    | _ -> env
 
 // Generator of closed terms -----------------------------------------------------
-let areThereFreeVars exp =
-    let rec loop exp varsSet =
-        match exp with 
-            | Lit x -> not (Set.contains x varsSet)
-            | Bool _ -> false
-            | Lam (var, body) as e -> 
-                occursFree var e || loop body (Set.add var varsSet)
-            | App (e1, e2) -> 
-                loop e1 varsSet || loop e2 varsSet
-            | If (e1,e2,e3) ->
-                loop e1 varsSet || loop e2 varsSet || loop e3 varsSet
-
-    loop exp (Set.empty)
 
 let goodId id =
     let ids = List.map string ['a'..'z']
     List.contains id ids
-
-let rec fillEnv env bound = function
-    | Lit l -> if not (List.contains l bound) then Map.add l (Boo true) env
-               else env
-    | Lam (l, exp) -> let env' = Map.add l (Boo true) env
-                      let bound' = l :: bound
-                      fillEnv env' bound' exp
-    | App (e, e') -> let env' = fillEnv env bound e
-                     fillEnv env' bound e'
-    | If (e, e', e'') -> let env' = fillEnv env bound e
-                         let env'' = fillEnv env' bound e'
-                         fillEnv env'' bound e''
-    | _ -> env
 
 // TODO size / 2?
 // TODO generate a different var each time for lambda, use a global variable
@@ -90,7 +55,7 @@ let rec generateExp size =
                gen
         | n when n > 0 ->
             let lambda size =
-                Gen.map2 (fun i e -> Lam (i, e)) (Gen.map id Arb.generate<ident> |> Gen.filter goodId) (generateExp (size - 1))
+                Gen.map2 (fun i tp e -> Lam (i, tp, e)) (Gen.map id Arb.generate<ident> |> Gen.filter goodId) (generateExp (size - 1))
             let app size =
                 Gen.map2 (fun e e' -> App (e, e')) (lambda (size)) (generateExp (size - 1))
             let ifeBody size = Gen.oneof [
