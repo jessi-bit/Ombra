@@ -70,6 +70,7 @@ let rec fillEnv env bound = function
     | _ -> env
 
 let rec generateExp size =
+    // TODO remove
     if size > 5 then (Gen.map Bool Arb.generate<bool>)
     else
     let a = Gen.map id Arb.generate<ident>
@@ -79,8 +80,6 @@ let rec generateExp size =
             Gen.map Bool Arb.generate<bool>]
         | n when n > 0 ->
             Gen.frequency [ 
-                (1, Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId));
-                (1, Gen.map Bool Arb.generate<bool>);
                 (4, Gen.map2 (fun i e -> Lam (i, e)) (Gen.map id Arb.generate<ident> |> Gen.filter goodId ) (generateExp (size - 1)));
                 (4, Gen.map2 (fun e e' -> App (e, e')) (generateExp (size - 1)) (generateExp (size - 1)));
                 (4,  Gen.map3 (fun e e' e'' -> If (e, e', e'')) (generateExp (size - 1)) (generateExp (size - 1)) (generateExp (size - 1)))
