@@ -1,6 +1,8 @@
 module Ombra.Interpreter.Substitution
 
+#load "interpreter-types.fs"
 open Ombra.Interpreter.Types
+
 #nowarn "25"
 
 // -------------------------------------------------------------

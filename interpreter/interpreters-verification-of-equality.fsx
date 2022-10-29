@@ -44,28 +44,18 @@ let goodId id =
 // Go back to recursive generator, generate well typed expressions
 // use lambda with types annotations
 let rec generateExp size =
-    // TODO remove
-    if size > 5 then (Gen.map Bool Arb.generate<bool>)
-    else
     match size with
-        | 0 -> let gen = Gen.oneof [
-                 Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId)
-                 Gen.map Bool Arb.generate<bool>
-               ]
-               gen
+        | 0 -> Gen.oneof [
+            Gen.map Lit Arb.generate<ident>
+            Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId)
+            Gen.map Bool Arb.generate<bool>]
         | n when n > 0 ->
-            let lambda size =
-                Gen.map2 (fun i tp e -> Lam (i, tp, e)) (Gen.map id Arb.generate<ident> |> Gen.filter goodId) (generateExp (size - 1))
-            let app size =
-                Gen.map2 (fun e e' -> App (e, e')) (lambda (size)) (generateExp (size - 1))
-            let ifeBody size = Gen.oneof [
-                Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId);
-                Gen.map Bool Arb.generate<bool>;
-                app (size);
+            Gen.frequency [  
+                (1, Gen.map Lit (Arb.generate<ident> |> Gen.filter goodId)); 
+                (1, Gen.map Bool Arb.generate<bool>);
+                (4, Gen.map3 (fun i tp e -> Lam (i, tp, e)) (Gen.map id (Arb.generate<ident> |> Gen.filter goodId)) (Gen.map id (Arb.generate<ty>)) (generateExp (size / 2)));
+                (4, Gen.map2 (fun e e' -> App (e, e')) (generateExp (size / 2)) (generateExp (size / 2)))
             ]
-            let ife size =
-                Gen.map3 (fun e e' e'' -> If (e, e', e'')) (ifeBody (size)) (generateExp (size - 1)) (generateExp (size - 1))
-            Gen.frequency [(4, lambda (size)); (4, app (size)); (4, ife (size))]
 
 let rec verifyequality valueC valueS envC =
     match (valueC, valueS) with
@@ -77,37 +67,36 @@ let rec verifyequality valueC valueS envC =
  
 let propVal = Gen.sized generateExp
             // |> Gen.filter (fun exp ->
-            //                match tpCheck (fillTpckEnv Map.empty exp) exp with
+            //                match (tpCheck Map.empty exp) with
             //                    | Some _ -> true
             //                    | _ -> printf "\nFAILED\n%A\n\n" exp
             //                           false)
-            |> Gen.filter (fun exp -> not (areThereFreeVars exp))
-            //|> Gen.filter (fun exp -> tpCheck Map.empty exp <> None)
+            // |> Gen.filter (fun exp -> not (areThereFreeVars exp))
+            // |> Gen.filter (fun exp -> tpCheck Map.empty exp <> None)
             |> Arb.fromGen
             |> Prop.forAll <| fun (ast) ->
-                let envC = fillEnv Map.empty List.empty ast
                 let resS = evalS ast
-                let resC = evalC envC ast
+                let resC = evalC Map.empty ast
                 printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
-                verifyequality resC resS envC
+                verifyequality resC resS Map.empty
 
-let r = Gen.sized generateExp |>
-            Gen.filter (fun exp -> not (areThereFreeVars exp)) |>
-            Gen.filter (fun exp -> match tpCheck (fillTpckEnv Map.empty exp) exp with
-                                       | Some _ -> true
-                                       | None   -> printf "\n\n**************** DID NOT TPCK\n %A\n\n\n" exp
-                                                   false) |>
-            Gen.filter (fun exp -> match exp with
-                                       | Bool _ -> false
-                                       | e -> true) |>
-            Gen.sample 1 10 |>
-            List.forall (fun (ast) ->
-                let envC = fillEnv Map.empty List.empty ast
-                let resS = evalS ast
-                let resC = evalC envC ast
-                printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
-                verifyequality resC resS envC)
+// let r = Gen.sized generateExp |>
+//             Gen.filter (fun exp -> not (areThereFreeVars exp)) |>
+//             Gen.filter (fun exp -> match tpCheck (fillTpckEnv Map.empty exp) exp with
+//                                        | Some _ -> true
+//                                        | None   -> printf "\n\n**************** DID NOT TPCK\n %A\n\n\n" exp
+//                                                    false) |>
+//             Gen.filter (fun exp -> match exp with
+//                                        | Bool _ -> false
+//                                        | e -> true) |>
+//             Gen.sample 1 10 |>
+//             List.forall (fun (ast) ->
+//                 let envC = fillEnv Map.empty List.empty ast
+//                 let resS = evalS ast
+//                 let resC = evalC envC ast
+//                 printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
+//                 verifyequality resC resS envC)
 
-printf "%A\n" r
+// printf "%A\n" r
 
-// do Check.Quick propVal
+do Check.Quick propVal
