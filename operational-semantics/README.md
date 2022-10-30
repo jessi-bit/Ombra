@@ -12,16 +12,18 @@ M,N,O ::= x | (M N) | λx.M | If (M, N, O)
 
 ### Operational semantics
 
+e ∈ Exp ::= x | e0 e1 | λx.e | If (e0, e1, e2)    (BNF)
+
 #### Closures
 
-The judgement  env |- e >> v means that the expression e has value v within the environment env.
+The judgement  env |- id >> e means that the identifier id corresponds to the expression e within the environment env.
 
 e0: a boolean `b` evaluates to the boolean value `b`
-e1: an identifier `x` evaluates to the value `env(x)` that it has in the current environment `env`
+e1: an identifier `x` evaluates to the value v if `env(x)` evaluates to v in the current environment `env`
 e2: `λx.e` evaluates to the closure `clos(x, e, env)`
 e3: e3true and e3false say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `v` as a result, `v` is the result of the if-then-else statement.
-e4: the Application of (λx.e) to `e1` evaluates to the value `v` if
-`e1` evaluates to `v0` in env and `e` evaluates to `v` in env U {x : v0}.
+e4: the Application of  `e0` to `e1` evaluates to the value `v` if
+`e0` evaluates to clos(x, e, env) in env and `e` evaluates to `v` in env U {x : e1}.
 
 ```
 env |- x : e    (env)
@@ -31,8 +33,8 @@ v ∈ Value ::= boo | clos (x, e, env)   (value result)
 ------------ (e0)
 env |- b >> b
 
-env(x) = v
------------- (e1)
+env(x) = e  e >> v
+------------------- (e1)
 env |- x >> v
 
 --------------------------- (e2)
@@ -46,46 +48,43 @@ env |- e1 >> false      env |- e3 >> v
 ---------------------------------------- (e3false)
 env |- if e1 then e2 else e3 >> v 
 
-env |- e1 >> v0     env[x -> v0] |- e >> v
--------------------------------------------- (e4)
-env |-  (λx.e)e1 >> v
+env |- e0 >> clos(x, e, env)   env[x -> e1] |- e >> v
+--------------------------------------------------------------------------- (e4)
+env |-  (e0 e1) >> v
 ```
 
 #### Substitutions
 
-The judgement  e >> e1 means that the expression e evaluates to e1. 
+The judgement  e >> v means that the expression e evaluates to the value v. 
 
-e0: a boolean `b` evaluates to the boolean `b`
-e1: a literal variable `x` evaluates to the literal variable `x`
-e2: `λx.e` evaluates to `λx.e`
-e3: Rule(e3true) and Rule(e3false) say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `e'` as a result, `e'` is the result of the if-then-else statement.
-e4: if `e1` is a lambda and substituting all free occurrencies of 
-`x` in `e` with `e2` yields `e'`, the application of `e1` to `e2` 
-evaluates to `e'`.
+e0: a boolean `b` evaluates to the boolean value `boolS(b)`
+e1: `λx.e` evaluates to the value `LamS (x,e)`
+e2: Rule(e2true) and Rule(e2false) say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `v1` as a result, `v1` is the result of the if-then-else statement.
+e3: if `e1` evaluates to `lamS(x,e)` and substituting all free occurrencies of 
+`x` in `e` with `e2` yields `v1`, the application of `e1` to `e2` 
+evaluates to `v1`.
 
 ```
-e ∈ Exp ::= x | e0 e1 | λx.e | If (e0, e1, e2)    (BNF)
+v ∈ ValueS ::= boolS | lamS (x, e)                (value result)
 
-------- (e0)
-b >> b
 
-------- (e1)
-x >> x
+-------------- (e0)
+b >> boolS(b)
 
-------------- (e2)
-λx.e >> λx.e
+------------------ (e1)
+λx.e >> lamS(x,e)
 
-e1 >> b(true)      e2 >> e'
----------------------------- (e3true)
-if e1 then e2 else e3 >> e' 
+e1 >> boolS(true)      e2 >> v1
+--------------------------------- (e2true)
+if e1 then e2 else e3 >> v1 
 
-e1 >> b(false)     e3 >> e'
----------------------------- (e3false)
-if e1 then e2 else e3 >> e'
+e1 >> boolS(false)     e3 >> v1
+---------------------------------- (e2false)
+if e1 then e2 else e3 >> v1
 
-e1 >> λx.e     e[e2/x] >> e'
------------------------------ (e4)
-(e1 e2) >> e'
+e1 >> lamS(x,e)     e[e2/x] >> v1
+---------------------------------- (e3)                        
+(e1 e2) >> v1
 ```
 
 ### Type rules
@@ -113,13 +112,12 @@ tEnv  |- e1 : BOOL    tEnv  |- e2 : t    tEnv  |- e3 : t
 tEnv |- if e1 then e2 else e3 : t
 
 
-
-tEnv(x) = t1   tEnv  |- e : t2  
+tEnv[x -> ty]  |- e : t2  
 ----------------------------------------------------------  (e3)
-tEnv |- (λx.e) : FUN (t1, t2)
+tEnv |- (λ(x : ty).e) : FUN (ty, t2)
 
 
-tEnv  |- e1 : FUN (t1, t2)   tEnv  |- e2 : t1   
+tEnv  |- e1 : FUN (t1, t2)   tEnv |- e2 : t1   
 ----------------------------------------------------------  (e4)
 tEnv |- (e1 e2) : t2
 
