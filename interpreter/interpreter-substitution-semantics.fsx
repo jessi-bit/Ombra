@@ -10,7 +10,7 @@ open Ombra.Interpreter.Types
 
 type valueS =
     | BoolS of bool
-    | LamS of (ident * exp)
+    | LamS of (ident * ty * exp)
 
 let rec occursFree x N  =
     match N with
@@ -32,9 +32,9 @@ let rec substitute M x N =
 
 let rec evalS = function
     | Bool b                 -> BoolS b
-    | Lam (id,_,body)        -> LamS (id,body)
+    | Lam (id,tp,body)        -> LamS (id,tp,body)
     | App (e, argE)          -> match (evalS e) with
-                                    | LamS (var, body) -> evalS (substitute body var argE)
+                                    | LamS (var,_, body) -> evalS (substitute body var argE)
     | If (condE, ifE, elseE) -> match evalS condE with
                                     | BoolS true -> evalS ifE
                                     | _          ->  evalS elseE
@@ -54,3 +54,9 @@ let cond  = App (Lam ("x", BOOL, Bool false), Bool true)
 let ifE   = Bool true
 let elseE = Bool false
 evalS (If (cond, ifE, elseE)) // false
+
+let e = Lam ("b", BOOL, Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m"))
+evalS e
+
+let e2 = Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m")
+evalS e2

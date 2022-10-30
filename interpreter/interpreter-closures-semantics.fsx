@@ -8,7 +8,7 @@ open Ombra.Interpreter.Types
 
 // after eval
 type valueC =
-    | Clos of (ident * exp * env)
+    | Clos of (ident * ty * exp * env)
     | Boo  of bool
 and env = Map<ident,exp>
 
@@ -17,10 +17,10 @@ let rec evalC env e =
     match e with
         | Lit l                  -> evalC env (Map.find l env)
         | Bool b                 -> Boo b
-        | Lam (ident, _, body) -> Clos (ident, body, env)
+        | Lam (ident,tp, body) -> Clos (ident, tp, body, env)
         | App (bodyE, argE)      ->
             match (evalC env bodyE) with
-                | Clos (ident, body, env) -> 
+                | Clos (ident, _, body, env) -> 
                     let env' = Map.add ident argE env
                     evalC env' body
         | If (condE, ifE, elseE) ->
@@ -40,3 +40,11 @@ let lam = Lam ("x", BOOL, Lit "x")
 evalC Map.empty lam
 let app = App (Lam ("x", BOOL, Lit "x"), (If (cond, ifE, elseE)))
 evalC Map.empty app
+
+
+let e = Lam ("b", BOOL, Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m"))
+evalC Map.empty e
+
+
+let e2 = Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m")
+evalC Map.empty e2
