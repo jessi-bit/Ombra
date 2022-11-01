@@ -26,3 +26,6 @@ type exp =
 and lamExp = ident * ty * exp
 
 5)+ materiale su Gen.
+
+-----------------------------------------
+Punto 2?

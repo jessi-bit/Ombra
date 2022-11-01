@@ -114,7 +114,7 @@ tEnv |- if e1 then e2 else e3 : t
 
 tEnv[x -> ty]  |- e : t2  
 ----------------------------------------------------------  (e3)
-tEnv |- (λ(x : ty).e) : FUN (ty, t2)
+tEnv |- (λx.e) : FUN (ty, t2)
 
 
 tEnv  |- e1 : FUN (t1, t2)   tEnv |- e2 : t1   

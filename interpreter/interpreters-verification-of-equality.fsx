@@ -61,6 +61,7 @@ let rec generateExp size =
                 (4, Gen.map3 (fun i tp e -> Lam (i, tp, e)) (Gen.map id (Arb.generate<ident> |> Gen.filter goodId)) (Gen.map id (Arb.generate<ty>)) (generateExp (size / 2)));
                 (5, Gen.map2 (fun e e' -> App (e, e')) (generateExp (size / 2)) (generateExp (size / 2)))
             ]
+
 let rec generateExp2 size =
     match size with
         | 0 -> Gen.oneof [
@@ -83,13 +84,13 @@ let rec generateExp2 size =
 let rec verifyequality valueC valueS envC =
     match (valueC, valueS) with
         | Boo b1, BoolS b2 -> b1 = b2
-        | Clos(id1, tp, e1, _), LamS(id2,tp2, e2) -> 
+        | Clos(id1, e1, _), LamS(id2, e2) -> 
             match (e1, e2) with
-                | Lit x, Lit y -> x = y && id1 = id2 && tp = tp2 
+                | Lit x, Lit y -> x = y && id1 = id2  
                 | _ ->
                     let e1' = evalC envC e1
                     let e2' = evalS e2
-                    id1 = id2 && tp = tp2 && (verifyequality e1' e2' envC)
+                    id1 = id2 && (verifyequality e1' e2' envC)
 
 let propVal = 
             Gen.sized generateExp2 
