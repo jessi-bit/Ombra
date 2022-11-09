@@ -41,11 +41,14 @@ let goodId id =
 let idGen =
     let vSet = varsSet.Value
     let letters = Seq.append ['a' .. 'z'] ['A' .. 'Z'] |> Seq.map string 
+    //TODO: the check that the var is not contained in the set in order to be generated
+    //has just to be made for the lambda gen purpose, not for each Ident generation.
     let goodVars = seq {for i in letters do if not (Set.contains i vSet) then yield i}
     Gen.elements goodVars
 
 // generation rules
 let ruleBoolean () = Gen.map Bool Arb.generate<bool>
+//TODO: Wrong. see the previous TODO.
 let ruleIdent () = Gen.map Lit idGen
 let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
                                         (gen {let! id = idGen
@@ -68,6 +71,7 @@ let rec generateExp size =
                 ruleIfe generateExp (size / 2)
             ]
 
+
 let rec verifyequality valueC valueS envC =
     match (valueC, valueS) with
         | Boo b1, BoolS b2 -> b1 = b2
@@ -75,6 +79,7 @@ let rec verifyequality valueC valueS envC =
             match (e1, e2) with
                 | Lit x, Lit y -> x = y && id1 = id2  
                 | _ ->
+                    //TODO : further evaluation here is wrong! another way to check equality must be found.
                     let e1' = evalC envC e1
                     let e2' = evalS e2
                     id1 = id2 && (verifyequality e1' e2' envC)

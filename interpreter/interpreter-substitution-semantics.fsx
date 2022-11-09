@@ -8,6 +8,13 @@ open Ombra.Interpreter.Types
 // -------------------------------------------------------------
 // Ombra's interpreter - Lambda Calculus substitution semantics
 
+//TODO: 
+//"Non è richiesto che la semantica a sostituzione abbia una nozione di valore sintattico. 
+//in generale basta un predicato booleano. 
+//Se avete un tipo value, tipicamente diventa mutuamente ricorsivo con quello dei termini e non vale la pena.
+//I think this refers to this type valueS, but the point is if just a Bool can be the result, what about 
+//The result of a lambda? To revise also this part in the semantic rules. 
+
 type valueS =
     | BoolS of bool
     | LamS of (ident * exp)
