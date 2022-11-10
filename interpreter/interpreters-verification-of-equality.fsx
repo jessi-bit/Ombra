@@ -11,7 +11,7 @@ open Ombra.Interpreter.Closures
 #load "interpreter-substitution-semantics.fsx"
 open Ombra.Interpreter.Substitution
 
-let varsSet= ref<Set<ident>> Set.empty
+let varsSet = ref<Set<ident>> Set.empty
 
 let rec tpCheck tEnv = function
     | Lit x -> Map.tryFind x tEnv
@@ -59,7 +59,11 @@ let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
                                         (generateExp (size / 2))
 // the first argument of an App is always a Lam
 let ruleApp generateExp size = Gen.map2 (fun e e' -> App (e, e')) (ruleLambda generateExp (size / 2)) (generateExp (size / 2))
-let ruleIfe generateExp size = Gen.map3 (fun cond e' e'' -> If (cond, e', e'')) (generateExp (size / 2)) (generateExp (size / 2)) (generateExp (size / 2))
+let ruleAllButLambda generateExp size = Gen.oneof [
+    ruleBoolean ()
+    ruleIdent ()
+    ruleApp generateExp (size / 2)]
+let ruleIfe generateExp size = Gen.map3 (fun cond e' e'' -> If (cond, e', e'')) (ruleAllButLambda generateExp (size / 2)) (generateExp (size / 2)) (generateExp (size / 2))
 
 let rec generateExp size =
     match size with
