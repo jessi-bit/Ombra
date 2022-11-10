@@ -68,17 +68,25 @@ let rec generateExp size =
             ]
 
 
-let rec verifyequality valueC valueS envC =
+let rec verifyEquality valueC valueS =
+
+    let rec verifyEqualityInner eC eS =
+        match (eC, eS) with
+            | (Bool _, Bool _) -> true
+            | (Lit l1, Lit l2) -> l1 = l2
+            | (Lam (i1, _, e1), Lam (i2, _, e2)) when i1 = i2 -> verifyEqualityInner e1 e2
+            | (App (eC', eC''), App (eS', eS'')) -> verifyEqualityInner eC' eS' && verifyEqualityInner eC'' eS''
+            | (If (eCCond, eCThen, eCElse), If (eSCond, eSThen, eSElse)) -> verifyEqualityInner eCCond eSCond &&
+                                                                                verifyEqualityInner eCThen eSThen &&
+                                                                                verifyEqualityInner eCElse eSElse
+
     match (valueC, valueS) with
-        | Boo b1, BoolS b2 -> b1 = b2
-        | Clos(id1, e1, _), LamS(id2, e2) -> 
-            match (e1, e2) with
-                | Lit x, Lit y -> x = y && id1 = id2  
+        | Boo bC, BoolS bS -> bC = bS
+        | Clos(idC, eC, _), LamS(idS, eS) ->
+            match (eC, eS) with
+                | Lit x, Lit y -> x = y && idC = idS
                 | _ ->
-                    //TODO : further evaluation here is wrong! another way to check equality must be found.
-                    let e1' = evalC envC e1
-                    let e2' = evalS e2
-                    id1 = id2 && (verifyequality e1' e2' envC)
+                    idC = idS && verifyEqualityInner eC eS
 
 let propVal = 
             Gen.sized generateExp
@@ -88,6 +96,6 @@ let propVal =
                 let resS = evalS ast
                 let resC = evalC Map.empty ast
                 printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
-                verifyequality resC resS Map.empty
+                verifyEquality resC resS
 
 do Check.Quick propVal
