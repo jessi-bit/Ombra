@@ -68,9 +68,7 @@ let rec generateExp size =
             Gen.oneof [
                 ruleLambda generateExp (size / 2)
                 ruleApp generateExp (size / 2)
-                ruleIfe generateExp (size / 2)
-            ]
-
+                ruleIfe generateExp (size / 2)]
 
 let rec verifyEquality valueC valueS =
 
@@ -85,8 +83,8 @@ let rec verifyEquality valueC valueS =
                                                                                 verifyEqualityInner eCElse eSElse
 
     match (valueC, valueS) with
-        | Boo bC, BoolS bS -> bC = bS
-        | Clos(idC, eC, _), LamS(idS, eS) ->
+        | Boo bC, Bool bS -> bC = bS
+        | Clos(idC, eC, _), Lam (idS, _, eS) ->
             match (eC, eS) with
                 | Lit x, Lit y -> x = y && idC = idS
                 | _ ->

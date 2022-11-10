@@ -8,17 +8,6 @@ open Ombra.Interpreter.Types
 // -------------------------------------------------------------
 // Ombra's interpreter - Lambda Calculus substitution semantics
 
-//TODO: 
-//"Non è richiesto che la semantica a sostituzione abbia una nozione di valore sintattico. 
-//in generale basta un predicato booleano. 
-//Se avete un tipo value, tipicamente diventa mutuamente ricorsivo con quello dei termini e non vale la pena.
-//I think this refers to this type valueS, but the point is if just a Bool can be the result, what about 
-//The result of a lambda? To revise also this part in the semantic rules. 
-
-type valueS =
-    | BoolS of bool
-    | LamS of (ident * exp)
-
 let rec occursFree x N  =
     match N with
         | Lit y when y = x      -> true
@@ -29,22 +18,21 @@ let rec occursFree x N  =
 
 let rec substitute M x N =
     match M with
-        | Lit v when v = x         -> N
-        | Lit _                    -> M
-        | Lam (v,_, _) when v = x  -> M
-        | Lam (v, tp,e)            -> Lam (v, tp,substitute e x N)
-        | App (e, e')              -> App ((substitute e x N), (substitute e' x N))
-        | If (condE, ifE, elseE)   -> If ((substitute condE x N), (substitute ifE x N), (substitute elseE x N))
-        | _                        -> M
+        | Lit v when v = x        -> N
+        | Lit _                   -> M
+        | Lam (v,_, _) when v = x -> M
+        | Lam (v, tp,e)           -> Lam (v, tp,substitute e x N)
+        | App (e, e')             -> App ((substitute e x N), (substitute e' x N))
+        | If (condE, ifE, elseE)  -> If ((substitute condE x N), (substitute ifE x N), (substitute elseE x N))
+        | _                       -> M
 
 let rec evalS = function
-    | Bool b                 -> BoolS b
-    | Lam (id,_,body)        -> LamS (id,body)
     | App (e, argE)          -> match (evalS e) with
-                                    | LamS (var, body) -> evalS (substitute body var argE)
+                                    | Lam (var, _,  body) -> evalS (substitute body var argE)
     | If (condE, ifE, elseE) -> match evalS condE with
-                                    | BoolS true -> evalS ifE
-                                    | _          ->  evalS elseE
+                                    | Bool true -> evalS ifE
+                                    | _         ->  evalS elseE
+    | e -> e
 
 // -------------------------------------------------------------
 // Ombra's interpreter - Tests
