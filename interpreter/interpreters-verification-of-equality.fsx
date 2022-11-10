@@ -33,30 +33,26 @@ let rec tpCheck tEnv = function
 
 // Generator of closed terms -----------------------------------------------------
 
-let goodId id =
-    let vSet = varsSet.Value
-    let ids = List.map string ['a'..'z'] 
-    List.contains id ids && not (Set.contains id vSet)
-
 let idGen =
-    let vSet = varsSet.Value
     let letters = Seq.append ['a' .. 'z'] ['A' .. 'Z'] |> Seq.map string 
-    //TODO: the check that the var is not contained in the set in order to be generated
-    //has just to be made for the lambda gen purpose, not for each Ident generation.
-    let goodVars = seq {for i in letters do if not (Set.contains i vSet) then yield i}
-    Gen.elements goodVars
-
+    Gen.elements letters
+    
+let noBoundIdGen =
+    let vSet = varsSet.Value
+    Gen.where (fun id -> not (Set.contains id vSet)) idGen
+    
 // generation rules
 let ruleBoolean () = Gen.map Bool Arb.generate<bool>
-//TODO: Wrong. see the previous TODO.
+
 let ruleIdent () = Gen.map Lit idGen
 let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
-                                        (gen {let! id = idGen
+                                        (gen {let! id = noBoundIdGen
                                               varsSet.Value <- Set.add id varsSet.Value
                                               return id})
                                         (gen {let! tp = Arb.generate<ty>
                                               return tp})
                                         (generateExp (size / 2))
+                                        
 // the first argument of an App is always a Lam
 let ruleApp generateExp size = Gen.map2 (fun e e' -> App (e, e')) (ruleLambda generateExp (size / 2)) (generateExp (size / 2))
 let ruleAllButLambda generateExp size = Gen.oneof [
