@@ -52,7 +52,7 @@ let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
                                         (gen {let! tp = Arb.generate<ty>
                                               return tp})
                                         (generateExp (size / 2))
-                                        
+
 // the first argument of an App is always a Lam
 let ruleApp generateExp size = Gen.map2 (fun e e' -> App (e, e')) (ruleLambda generateExp (size / 2)) (generateExp (size / 2))
 let ruleAllButLambda generateExp size = Gen.oneof [
@@ -100,4 +100,6 @@ let propVal =
                 printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
                 verifyEquality resC resS
 
-do Check.Quick propVal
+let config = {Config.Quick with MaxTest = 500}
+              
+do Check.One (config, propVal)
