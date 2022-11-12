@@ -10,4 +10,3 @@ type exp =
     | App   of (exp * exp)
     | Bool  of bool
     | If    of (exp * exp * exp)
-

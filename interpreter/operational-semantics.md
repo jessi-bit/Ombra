@@ -16,7 +16,7 @@ e ∈ Exp ::= x | e0 e1 | λx.e | If (e0, e1, e2)    (BNF)
 
 #### Closures
 
-The judgement  env |- e >> v means that the expression e evaluates to the value v within the environment env.
+The judgement env |- e >> v means that the expression e evaluates to the value v within the environment env.
 
 e0: a boolean `b` evaluates to the boolean value `b`
 e1: an identifier `x` evaluates to the value v if `env(x)` evaluates to v in the current environment `env`

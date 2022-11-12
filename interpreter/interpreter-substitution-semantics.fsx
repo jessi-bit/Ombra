@@ -32,26 +32,4 @@ let rec evalS = function
     | If (condE, ifE, elseE) -> match evalS condE with
                                     | Bool true -> evalS ifE
                                     | _         ->  evalS elseE
-    | e -> e
-
-// -------------------------------------------------------------
-// Ombra's interpreter - Tests
-
-let lam = App (Lam ("x", BOOL, Lit "x"), (App (Lam ("x", BOOL, Lit "x"), Bool true)))
-evalS lam
-
-let idE = Lam ("x", BOOL, Lit "x")
-let appInAppInApp = App (App (App (idE, idE), idE), Bool false)
-evalS appInAppInApp
-
-// K combinator that returns false
-let cond  = App (Lam ("x", BOOL, Bool false), Bool true)
-let ifE   = Bool true
-let elseE = Bool false
-evalS (If (cond, ifE, elseE)) // false
-
-let e = Lam ("b", BOOL, Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m"))
-evalS e
-
-let e2 = Lam ("m", FUN (FUN (BOOL, BOOL), BOOL), Lit "m")
-evalS e2
+    | e                      -> e

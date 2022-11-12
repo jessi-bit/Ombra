@@ -43,7 +43,6 @@ let noBoundIdGen =
     
 // generation rules
 let ruleBoolean () = Gen.map Bool Arb.generate<bool>
-
 let ruleIdent () = Gen.map Lit idGen
 let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
                                         (gen {let! id = noBoundIdGen
@@ -52,23 +51,29 @@ let ruleLambda generateExp size = Gen.map3 (fun i tp e -> Lam (i, tp, e))
                                         (gen {let! tp = Arb.generate<ty>
                                               return tp})
                                         (generateExp (size / 2))
-
-// the first argument of an App is always a Lam
 let ruleApp generateExp size = Gen.map2 (fun e e' -> App (e, e')) (ruleLambda generateExp (size / 2)) (generateExp (size / 2))
-let ruleAllButLambda generateExp size = Gen.oneof [
+let ruleIfCond generateExp size = Gen.oneof [
     ruleBoolean ()
-    ruleIdent ()
     ruleApp generateExp (size / 2)]
-let ruleIfe generateExp size = Gen.map3 (fun cond e' e'' -> If (cond, e', e'')) (ruleAllButLambda generateExp (size / 2)) (generateExp (size / 2)) (generateExp (size / 2))
+let ruleIfBranch generateExp size = Gen.frequency [
+    (1, ruleBoolean())
+    (2, ruleApp generateExp (size / 2))
+    (1, ruleLambda generateExp (size / 2))
+    (10, ruleIfCond generateExp (size / 2))
+]
+
+let ruleIfe generateExp size = 
+    Gen.map3 (fun cond e' e'' -> If (cond, e', e'')) (ruleIfCond generateExp (size / 2)) (ruleIfBranch generateExp (size / 2)) (ruleIfBranch generateExp (size / 2))
 
 let rec generateExp size =
     match size with
         | 0 -> Gen.oneof [ruleBoolean (); ruleIdent ()]
         | n when n > 0 ->
-            Gen.oneof [
-                ruleLambda generateExp (size / 2)
-                ruleApp generateExp (size / 2)
-                ruleIfe generateExp (size / 2)]
+            Gen.frequency [
+                (1, ruleLambda generateExp (size / 2))
+                (2, ruleApp generateExp (size / 2))
+                (8, ruleIfe generateExp (size / 2))
+                ]
 
 let rec verifyEquality valueC valueS =
 
@@ -97,9 +102,8 @@ let propVal =
             |> Prop.forAll <| fun (ast) ->
                 let resS = evalS ast
                 let resC = evalC Map.empty ast
-                printf "\n********************\nAST was %A\nsubstitution: %A\nclosures: %A\n" ast resS resC
+                printf "\n********************\nAST was: \n%A\nSubstitution interpretation: \n%A\nClosures interpretation: \n%A\n" ast resS resC
                 verifyEquality resC resS
 
-let config = {Config.Quick with MaxTest = 500}
-              
+let config = {Config.Quick with MaxTest = 10000}
 do Check.One (config, propVal)
