@@ -16,7 +16,7 @@ e ∈ Exp ::= x | e0 e1 | λx.e | If (e0, e1, e2)    (BNF)
 
 #### Closures
 
-The judgement  env |- id >> e means that the identifier id corresponds to the expression e within the environment env.
+The judgement  env |- e >> v means that the expression e evaluates to the value v within the environment env.
 
 e0: a boolean `b` evaluates to the boolean value `b`
 e1: an identifier `x` evaluates to the value v if `env(x)` evaluates to v in the current environment `env`
@@ -57,10 +57,10 @@ env |-  (e0 e1) >> v
 
 The judgement  e >> v means that the expression e evaluates to the value v. 
 
-e0: a boolean `b` evaluates to the boolean value `boolS(b)`
-e1: `λx.e` evaluates to the value `LamS (x,e)`
+e0: a boolean `b` evaluates to the boolean value b.
+e1: `λx.e` evaluates to `λx.e`.
 e2: Rule(e2true) and Rule(e2false) say that just one of the branches `e2` and `e3` need to be evaluated: `e2` if `e1` evaluates to the boolean value true, `e3` if `e1` evaluates to the boolean value false. If the evaluated branch produces `v1` as a result, `v1` is the result of the if-then-else statement.
-e3: if `e1` evaluates to `lamS(x,e)` and substituting all free occurrencies of 
+e3: if `e1` evaluates to  λx.e  and substituting all free occurrencies of 
 `x` in `e` with `e2` yields `v1`, the application of `e1` to `e2` 
 evaluates to `v1`.
 
@@ -69,20 +69,20 @@ v ∈ ValueS ::= boolS | lamS (x, e)                (value result)
 
 
 -------------- (e0)
-b >> boolS(b)
+b >> b
 
 ------------------ (e1)
-λx.e >> lamS(x,e)
+λx.e >> λx.e
 
-e1 >> boolS(true)      e2 >> v1
+e1 >> true     e2 >> v1
 --------------------------------- (e2true)
 if e1 then e2 else e3 >> v1 
 
-e1 >> boolS(false)     e3 >> v1
+e1 >> false     e3 >> v1
 ---------------------------------- (e2false)
 if e1 then e2 else e3 >> v1
 
-e1 >> lamS(x,e)     e[e2/x] >> v1
+e1 >> λx.e    e[e2/x] >> v1
 ---------------------------------- (e3)                        
 (e1 e2) >> v1
 ```
