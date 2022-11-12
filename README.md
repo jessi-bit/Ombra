@@ -5,7 +5,7 @@
 Verifying using FsCheck that a closure based interpreter and a substitution based interpreter yield the same results; 
 built with :heart: by [JessiBit](https://github.com/jessi-bit) and [lazywithclass](https://github.com/lazywithclass).
 
-[Operational semantics](operational-semantics.md).
+[Operational semantics](interpreter/operational-semantics.md).
 
 ## Usage
 
