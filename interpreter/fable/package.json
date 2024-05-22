@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "scripts": {
+    "build": "esbuild interpreters-verification-of-equality-fixed.fs.js --platform=neutral --bundle --outfile=ombra.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.3"
+  }
+}

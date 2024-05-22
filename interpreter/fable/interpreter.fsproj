@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- never use *.fs -->
+    <Compile Include="interpreter-types.fs" />
+    <Compile Include="interpreter-closures-semantics.fsx" />
+    <Compile Include="interpreter-substitution-semantics.fsx" />
+    <Compile Include="interpreters-verification-of-equality-fixed.fsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fable.Node" Version="1.2.0" />
+    <PackageReference Include="FsCheck" Version="2.16.5" />
+  </ItemGroup>
+
+</Project>
